@@ -12,13 +12,13 @@ I initially intended for this to be just a module in a larger **Comfy CLI** tool
 
 ![screenshot](image.png)
 
-## Why Use Civitai Model Downloader?
+## Why
 
 The main reason I developed this tool was to address my own challenges: navigating through numerous clicks and waiting for slow downloads on the website. I needed a more efficient way to organize and manage my AI models, and the result is this CLI tool that allows me (and you) to store models in a centralized directory. The tool also allows for a quick model summary via the Ollama(OpenAI) API, which is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description.
 
 ## Key Features
 
-- **Quick Model Listing**: This tool will quickly list all available models alongside their types and storage paths, significantly reducing the time spent navigating through the website.
+- **Quick Model Listing**: This tool will quickly list all available models alongside their types and storage paths.
 
 - **Categorical Inspection**: It counts models categorized by type, providing insightful organization at a glance.
 
@@ -28,7 +28,7 @@ The main reason I developed this tool was to address my own challenges: navigati
 
 - **Simplified Removals**: Easily remove unnecessary models from local storage to keep things tidy.
 
-- **Summarized Descriptions**: Get concise summaries of specific models by using Ollama's API for enhanced understanding.
+- **Summarized Descriptions**: Get summaries of specific models by using Ollama's API for enhanced understanding.
 
 ## Installation
 
@@ -62,7 +62,7 @@ python test_civitai_model_manager.py
 
 ### Configuration
 
-Before using the tool, I recommend setting up a `.env` file in your preferred location with the following environment variables:
+Before using the tool, Its required to set up a `.env` file parent directory of the script or your home dir with the following environment variables:
 
 ```env
 CIVITAI_TOKEN=# obtain from https://developer.civitai.com/docs/getting-started/setup-profile#create-an-api-key
