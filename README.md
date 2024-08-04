@@ -1,6 +1,7 @@
 # Civitai Model Manager
 
-> ⚠️ **Warning:** This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystem...
+> [!WARNING] 
+> This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystem...
 
 
 
@@ -62,7 +63,8 @@ python test_civitai_model_manager.py
 
 ### Configuration
 
-Before using the tool, Its required to set up a `.env` file parent directory of the script or your home dir with the following environment variables:
+> [!IMPORTANT] 
+> Before using the tool, Its required to set up a `.env` file parent directory of the script or your home dir with the following environment variables:
 
 ```env
 CIVITAI_TOKEN=# obtain from https://developer.civitai.com/docs/getting-started/setup-profile#create-an-api-key
@@ -79,13 +81,11 @@ The application intelligently locates your `.env` file, accommodating various pl
 
 ## Usage
 
+
+> [!NOTE]  
+> Make sure to grab the main model ID from the Civitai website and not the model variant ID. The model ID is the number in the URL after `/models/`, like so: https://civitai.com/models/`277058`/epicrealism-xl
+
 ### Available Commands
-
-Make sure to grab the main model ID from the Civitai website and not the model variant ID. The model ID is the number in the URL after `/models/`, like so:
-
-https://civitai.com/models/`277058`/epicrealism-xl
-
-
 ```bash
 # List all available models
 python civitai_model_manager.py --list
