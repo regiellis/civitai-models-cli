@@ -1,4 +1,4 @@
-# Civitai Model Manager
+### Civitai Model Manager
 
 > [!WARNING] 
 > This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystem...
