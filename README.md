@@ -32,7 +32,9 @@ The main reason I developed this tool was to address my own challenges: navigati
 
 ## Installation
 
-To get started, ensure you have [pipx](https://pipxproject.github.io/pipx/installation/) installed, and then run the tool with the following command:
+You have a couple of options for installing/running the tool:
+
+### Install [pipx](https://pipxproject.github.io/pipx/installation/), then run the tool with the following command:
 
 ```bash
 pipx run file:comfy_model_manager.py [OPTIONS]
@@ -78,34 +80,6 @@ The application intelligently locates your `.env` file, accommodating various pl
 ## Usage
 
 ### Available Commands
-
-- `list`  
-  Lists all available models along with their types and paths.
-
-- `inspect`  
-  Counts and displays models organized by type.
-
-- `details INT`  
-  Provides detailed information about a specific model identified by its ID.
-
-- `download INT`  
-  Downloads a specific model by its ID.
-
-- `download INT --version INT`  
-  Downloads a specific model variant by its ID.
-
-- `remove`  
-  Allows you to remove specified models from local storage.
-
-- `summarize INT`  
-  Retrieves a summary of a model by its ID using Ollama.
-
-- `--help`  
-  Displays help information and exits.
-
-### Examples
-
-To illustrate how to use the CLI tool, here are some examples:
 
 Make sure to grab the main model ID from the Civitai website and not the model variant ID. The model ID is the number in the URL after `/models/`, like so:
 
