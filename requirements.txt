@@ -1,0 +1,9 @@
+typer
+rich
+requests
+shellingham
+tqdm
+civitai
+python-dotenv
+ollama
+openai
