@@ -112,7 +112,7 @@ OLLAMA_OPTIONS = {
         "You are an expert in giving detailed explanations of information you are provided. Do not present it "
         "like an update log. Make sure it is clear, concise, and explains the information in a way that is easy to understand. "
         "The information is not provided by the user and comes from the CivitAI API, so don't make recommendations on how to "
-        "improve the description, just be detailed about the provided content. Include recommended settings like if in the information:\n"
+        "improve the description, just be detailed about the provided content. Include recommended settings if in the information:\n"
         "- Sampling method\n"
         "- Schedule type\n"
         "- Sampling steps\n"
