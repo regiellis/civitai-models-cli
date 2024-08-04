@@ -1,4 +1,4 @@
-# Civitai Model Downloader
+# Civitai Model Manager
 
 > ⚠️ **Warning:** This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystem...
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-**Civitai Model Downloader** is a Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **CivitAI platform**. This came about as a solution to my own frustrations with the cumbersome Civitai website interface, which often felt slow and required an excessive number of clicks to download models.
+**Civitai Model Manager** is a Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **CivitAI platform**. This came about as a solution to my own frustrations with the cumbersome Civitai website interface, which often felt slow and required an excessive number of clicks to download models.
 
 I initially intended for this to be just a module in a larger **Comfy CLI** toolset, but I found it so useful in its standalone format that I decided to share it with anyone who might feel the same way.
 
