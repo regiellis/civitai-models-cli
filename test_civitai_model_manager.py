@@ -7,6 +7,8 @@ from rich.table import Table
 
 console = Console()
 
+# TODO: Add more tests to cover all functions in civitai_model_manager.py
+# TODO: Fix failing tests
 class TestCivitaiModelManager(unittest.TestCase):
 
     @patch('os.walk')
