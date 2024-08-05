@@ -88,8 +88,7 @@ class TestCivitaiModelManager(unittest.TestCase):
 
     @patch('civitai_model_manager.requests.get')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('os.makedirs')
-    def test_download_file(self, mock_makedirs, mock_open, mock_requests_get):
+    def test_download_file(self, mock_open, mock_requests_get):
         """Test downloading a model file."""
         mock_response = MagicMock()
         content = [b'a' * 8192] * 10  # each chunk is 8192 bytes, 10 chunks total
@@ -103,7 +102,7 @@ class TestCivitaiModelManager(unittest.TestCase):
         model_path = manager.download_file('http://example.com/model', '/fake_dir/model.safetensors', 'Test Model')
         self.assertTrue(model_path)
 
-    @patch('os.path.exists', return_value=True)
+    @patch('os.path.exists', return_value=True)  # Mock the file exists
     @patch('os.access', return_value=True)
     @patch('os.remove')
     @patch('builtins.input', return_value='y')
@@ -111,9 +110,9 @@ class TestCivitaiModelManager(unittest.TestCase):
     def test_remove_model(self, mock_tqdm, mock_input, mock_os_remove, mock_os_access, mock_os_path_exists):
         """Test removing a model file."""
         mock_tqdm.return_value.__enter__.return_value.update = MagicMock()
-        self.assertTrue(manager.remove_model('/fake_dir/model.safetensors'))
-        mock_os_remove.assert_called_once_with('/fake_dir/model.safetensors')
-        mock_tqdm.return_value.__enter__.return_value.update.assert_called_once()
+        self.assertTrue(manager.remove_model('/fake_dir/model.safetensors'))  # Assert True since the file exists
+        mock_os_remove.assert_called_once_with('/fake_dir/model.safetensors')  # Assert that os.remove is called with the correct path
+        mock_tqdm.return_value.__enter__.return_value.update.assert_called_once()  # Assert that tqdm.update is called
 
     @patch('civitai_model_manager.get_model_details')
     @patch('civitai_model_manager.Ollama.chat')

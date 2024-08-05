@@ -7,3 +7,4 @@ civitai
 python-dotenv
 ollama
 openai
+groq
