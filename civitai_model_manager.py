@@ -29,6 +29,7 @@ $ python civitai_model_manager.py --download 54321
 $ python civitai_model_manager.py --download 54321 --version 12322
 $ python civitai_model_manager.py --remove
 $ python civitai_model_manager.py --summarize 12345
+$ python civitai_model_manager.py --summarize 12345 --service openai
 """
 
 # /// script
@@ -38,61 +39,68 @@ $ python civitai_model_manager.py --summarize 12345
 #   "rich",
 #   "requests",
 #   "shellingham",
+#   "html2text",
 #   "tqdm",
 #   "civitai",
 #   "python-dotenv",
 #   "ollama",
-#   "openai"
+#   "openai",
+#   "groq"
 # ]
 # ///
 
 import os
 import platform
+import json
 from typing import Any, Dict, List, Optional, Tuple
 import requests
 import typer
 from dotenv import load_dotenv, find_dotenv
 from rich.console import Console
+from rich import print
 from rich.table import Table
+from rich.markdown import Markdown
+
 from tqdm import tqdm
 
-from ollama import Client  # Verify the correct package name and import
-from openai import OpenAI  # Verify the correct package name
+from ollama import Client as OllamaClient
+from openai import OpenAI as OpenAIClient
+from groq import Groq as GroqClient
 
-from civitai import models, tags  # Adjust according to actual usage
+from civitai import models, tags
+import html2text
+
+
+# TODO: AS some point refactor everything into separate modules and classes
 
 def load_environment_variables():
-    # Determine the platform
+
     system_platform = platform.system()
-    
-    # Define the location to search based on the platform
+ 
     if system_platform == "Windows":
-        dotenv_path = os.path.join(os.path.expanduser("~"), ".env")  # User's home directory on Windows
+        dotenv_path = os.path.join(os.path.expanduser("~"), ".env")
     elif system_platform == "Linux":
-        # For Ubuntu or other Linux distributions, look in the .config/cmm/ directory
         dotenv_path = os.path.join(os.path.expanduser("~"), ".config", "cmm", ".env")
     else:
-        # For other platforms, default to the current directory
         dotenv_path = ".env"
     
-    # Load the environment variables from the determined .env file
     if os.path.exists(dotenv_path):
         load_dotenv(dotenv_path)
     else:
-        # If .env file not found, look in the current directory
         current_dir_dotenv_path = ".env"
         if os.path.exists(current_dir_dotenv_path):
             load_dotenv(current_dir_dotenv_path)
         else:
-            # Warn the user about the missing .env file
-            print("Warning: .env file is missing. Please create one using the sample.env provided.")
+            table = Table(title="Missing .env :", style="yellow", title_justify="left")
+            table.add_column("Warning Message")
+            table.add_row(".env file is missing. Please create one using the sample.env provided.")
+            console.print(table)
 
 
 load_environment_variables()
 MODELS_DIR = os.getenv("MODELS_DIR", "")
 CIVITAI_TOKEN = os.getenv("CIVITAI_TOKEN", "")
 
-# Initialize constants
 CIVITAI_URL = f"https://civitai.com/api/v1/models?token={CIVITAI_TOKEN}"
 CIVITAI_DOWNLOAD = "https://civitai.com/api/download/models"
 TYPES = {
@@ -108,30 +116,96 @@ TYPES = {
 OLLAMA_OPTIONS = {
     "model": os.getenv("OLLAMA_MODEL", ""),
     "api_base": os.getenv("OLLAMA_API_BASE", ""),
+    "temperature": os.getenv("TEMP", 0.9),
+    "top_p": os.getenv("TOP_P", 0.3),
+    "html_output": os.getenv("CONVERT_HTML", False),
     "system_template": (
-        "You are an expert in giving detailed explanations of information you are provided. Do not present it "
-        "like an update log. Make sure it is clear, concise, and explains the information in a way that is easy to understand. "
-        "The information is not provided by the user and comes from the CivitAI API, so don't make recommendations on how to "
-        "improve the description, just be detailed about the provided content. Include recommended settings if in the information:\n"
+        "You are an expert in giving detailed explanations of description you are provided. Do not present it"
+        "like an update log. Make sure to explains the full description in a way that is easy to understand. "
+        "The description is not provided by the user but comes from the CivitAI API, so don't make recommendations on how to "
+        "improve the description, just be detailed, clear and thorough about the provided content. "
+        "Include recommended settings and tip if it appears in the description:\n"
+        " - Tips on Usage\n"
         "- Sampling method\n"
         "- Schedule type\n"
         "- Sampling steps\n"
         "- CFG Scale\n"
-        "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION. DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!!"
+        "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!!\n"
+        "Return the description in Markdown format.\n\n"
+        "You will find the description below: \n\n"
+        
     )
 }
 
-CHATGPT_OPTIONS = {
+OPENAI_OPTIONS = {
     "api_key": os.getenv("OPENAI_API_KEY", ""),
     "model": os.getenv("OPENAI_MODEL", ""),
     "system_template": OLLAMA_OPTIONS["system_template"]
 }
 
-Ollama = Client(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None
-ChatGPT = OpenAI(api_key=CHATGPT_OPTIONS["api_key"]) if CHATGPT_OPTIONS["api_key"] else None
+GROQ_OPTIONS = {
+    "api_key": os.getenv("GROQ_API_KEY", ""),
+    "model": os.getenv("GROQ_MODEL", ""),
+    "system_template": OLLAMA_OPTIONS["system_template"]
+}
+
+
+Ollama = OllamaClient(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None
+OpenAI = OpenAIClient(api_key=OPENAI_OPTIONS["api_key"]) if OPENAI_OPTIONS["api_key"] else None
+Groq = GroqClient(api_key=GROQ_OPTIONS["api_key"]) if GROQ_OPTIONS["api_key"] else None
+
 
 console = Console()
+h2t = html2text.HTML2Text()
 app = typer.Typer()
+
+# TODO: More robust logic checks...this is just a basic check
+def sanity_check() -> None:
+    CHECKS = {
+        "REQUIRED": {
+            "MODELS_DIR": False,
+            "CIVITAI_TOKEN": False,
+            "CIVITAI_AVAILABILITY": False,
+            "WRITE_PERMISSION": False,
+        },            
+        "OPTIONAL": {
+            "OLLAMA_ACCESSIBLE": False,
+            "OPENAI_ACCESSIBLE": False,
+            "API_AVAILABILITY": False,
+            "MODEL_AVAILABILITY": False,
+        }
+    }
+    
+    if MODELS_DIR:
+        CHECKS["REQUIRED"]["MODELS_DIR"] = True
+        if os.path.exists(MODELS_DIR):
+            CHECKS["REQUIRED"]["WRITE_PERMISSION"] = os.access(MODELS_DIR, os.W_OK)
+        else:
+            CHECKS["REQUIRED"]["WRITE_PERMISSION"] = False
+    else:
+        CHECKS["REQUIRED"]["MODELS_DIR"] = False
+        
+    if CIVITAI_TOKEN:
+        CHECKS["REQUIRED"]["CIVITAI_TOKEN"] = True
+        response = requests.get(CIVITAI_URL)
+        CHECKS["REQUIRED"]["CIVITAI_AVAILABILITY"] = True
+    else:
+        CHECKS["REQUIRED"]["CIVITAI_TOKEN"] = False
+        CHECKS["REQUIRED"]["CIVITAI_AVAILABILITY"] = False
+
+    table = Table(title="Sanity Check")
+    table.add_column("Check", style="cyan")
+    table.add_column("Status", style="magenta")
+    table.add_column("Message", style="green")
+    
+    for check, status in CHECKS["REQUIRED"].items():
+        if status:
+            table.add_row(check, "Pass", "Ready to run the script.")
+        else:
+            table.add_row(check, "Fail", "Please set the required environment variables.")
+            
+    console.print(table)
+    return None
 
 
 def list_models(model_dir: str) -> List[Tuple[str, str, str]]:
@@ -328,36 +402,54 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
 
     try:
         if service == "ollama" and Ollama:
-
             response = Ollama.chat(
                 model=OLLAMA_OPTIONS["model"],
                 messages=[
                     {"role": "system", "content": OLLAMA_OPTIONS["system_template"]},
-                    {"role": "user", "content": description} 
+                    {"role": "user", "content": f"{OLLAMA_OPTIONS["system_template"]} {description}"}
                     # consider adding the system template
                     # to the prompt since not all models follow the system template
                 ],
-                options={"temperature": 0.7},
+
+                options={"temperature": float(OLLAMA_OPTIONS["temperature"]), "top_p": float(OLLAMA_OPTIONS["top_p"])},
                 keep_alive=0 # Free up the VRAM
             )
-            return response['message']['content']
-        elif service == "openai" and ChatGPT:
-            response = ChatGPT.chat.completions.create(
-                model=CHATGPT_OPTIONS["model"],
+            if 'message' in response and 'content' in response['message']:
+                print(OLLAMA_OPTIONS["temperature"])
+                if OLLAMA_OPTIONS["html_output"]:
+                    return h2t.handle(response['message']['content'])
+                else:
+                    return Markdown(response['message']['content'])
+                
+        elif service == "openai" and OpenAI:
+            response = OpenAI.chat.completions.create(
+                model=OPENAI_OPTIONS["model"],
                 messages=[
-                    {"role": "system", "content": CHATGPT_OPTIONS["system_template"]},
+                    {"role": "system", "content": OPENAI_OPTIONS["system_template"]},
                     {"role": "user", "content": description}
-                ]
+                ],
             )
             return response.choices[0].message.content
+
+        elif service == "groq" and Groq:
+            response = Groq.chat.completions.create(
+                model=GROQ_OPTIONS["model"],
+                messages=[
+                    {"role": "system", "content": GROQ_OPTIONS["system_template"]},
+                    {"role": "user", "content": description}
+                ],
+            )
+            print(response)
+            return response.choices[0].message.content
+
     except Exception as e:
         table = Table(style="red")
         table.add_column("Error Message")
         table.add_row(str(e))
         console.print(table)
         return None
-    
-    
+
+
 @app.command("list")
 def list_models_cli():
     """List available models along with their types and paths."""
@@ -475,7 +567,13 @@ def get_model_details_cli(identifier: str):
         table.add_row(str(ValueError))
         console.print(table)
 
-        
+
+@app.command("sanity")
+def sanity_check_cli():
+    """Check if the script is ready to run by verifying the required environment variables. BASIC!!!"""
+    sanity_check()
+
+
 @app.command("download")
 def download_model_cli(identifier: str, version: str = "latest"):
     """Download a specific model variant by ID."""
