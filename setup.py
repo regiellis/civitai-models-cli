@@ -11,6 +11,7 @@ setup(
         "rich",
         "requests",
         "shellingham",
+        "html2text",
         "tqdm",
         "civitai",
         "python-dotenv",
