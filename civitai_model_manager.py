@@ -32,7 +32,6 @@ $ python civitai_model_manager.py --summarize 12345
 $ python civitai_model_manager.py --summarize 12345 --service openai
 """
 
-
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
