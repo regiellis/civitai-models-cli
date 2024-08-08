@@ -5,7 +5,8 @@
 
 ## Overview
 
-**Civitai Model Manager** is a Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **CivitaiAI platform**. This came about as a solution to my own frustrations with the cumbersome Civitai website interface, which often felt slow and required an excessive number of clicks to download mode or inspect models.
+**Civitai Model Manager** is a Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **Civitai platform**. This came about as a solution to quickly working with and manage models out
+side the main site.
 
 I initially intended for this to be just a module in a larger **Comfy CLI** toolset, but I found it so useful in its standalone format that I decided to share it with anyone who might feel the same way.
 
@@ -13,7 +14,8 @@ I initially intended for this to be just a module in a larger **Comfy CLI** tool
 
 ## Why
 
-The main reason I developed this tool was to address my own challenges: navigating through numerous clicks and waiting for slow downloads on the website. I needed a more efficient way to organize and manage my AI models, and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary via the Ollama(OpenAI), OpenAI or Groq if you choose. It is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description that may not be in your native language.
+I needed a more efficient way to download, organize and manage my AI models from the site and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary 
+via the Ollama(OpenAI), OpenAI or Groq if you choose. It is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description that may not be in your native language.
 
 ## Key Features
 
@@ -39,6 +41,12 @@ You have a couple of options for installing/running the tool:
 
 ```bash
 pipx run file:comfy_model_manager.py [OPTIONS]
+```
+
+or 
+
+```bash
+pipx install .
 ```
 
 ### Alternatively, you can install using `pip`
