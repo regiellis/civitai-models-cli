@@ -50,12 +50,13 @@ $ python civitai_model_manager.py --explain 12345 [--service ollama]
 
 import os
 import sys
-import platform
 import json
 from typing import Any, Dict, List, Optional, Tuple
 import requests
 import typer
 import html2text
+from platform import system
+from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from rich.console import Console
 from rich import print
@@ -76,31 +77,30 @@ from civitai import models, tags
 # TODO: At some point refactor everything into separate modules and classes
 # TODO: Remove the civitai dependency and use the API directly
 
-def load_environment_variables():
+def load_environment_variables(console: Console = Console()) -> None:
+    """
+    Load environment variables from .env file.
+    
+    If the file is not found in the default location, it will be searched in the current directory.
+    If still not found, a warning message will be printed to create the file using the sample.env provided.
+    """
+    env_paths = {
+        "Windows": os.path.join(os.path.expanduser("~"), ".env"),
+        "Linux": os.path.join(os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"),
+        "Darwin": os.path.join(os.path.expanduser("~"), ".config", "civitai-model-manager", ".env")
+    }
+    
+    system_platform = system()
+    dotenv_path = env_paths.get(system_platform, ".env")
+    
+    for path in [Path(dotenv_path), Path(".env")]:
+        if path.exists():
+            load_dotenv(str(path))
+            return
+    
+    feedback_message(".env file is missing. Please create one using the sample.env provided.", "warning")
 
-    system_platform = platform.system()
- 
-    if system_platform == "Windows":
-        dotenv_path = os.path.join(os.path.expanduser("~"), ".env")
-    elif system_platform == "Linux":
-        dotenv_path = os.path.join(os.path.expanduser("~"), ".config", "civitai-model-manager", ".env")
-    else:
-        dotenv_path = ".env"
-           
-    if os.path.exists(dotenv_path):
-        load_dotenv(dotenv_path)
-    else:
-        current_dir_dotenv_path = ".env"
-        if os.path.exists(current_dir_dotenv_path):
-            load_dotenv(current_dir_dotenv_path)
-        else:
-            table = Table(title="Missing .env :", style="yellow", title_justify="left")
-            table.add_column("Warning Message")
-            table.add_row(".env file is missing. Please create one using the sample.env provided.")
-            console.print(table)
-
-
-load_environment_variables()
+load_environment_variables(Console())
 MODELS_DIR = os.getenv("MODELS_DIR", "")
 CIVITAI_TOKEN = os.getenv("CIVITAI_TOKEN", "")
 
