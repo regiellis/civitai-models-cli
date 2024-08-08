@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='civitai_model_manager',
     python_requires='>=3.10',
-    version='0.1',
+    version='0.3',
     packages=find_packages(),
     py_modules=['civitai_model_manager'],
     install_requires=[
@@ -16,7 +16,8 @@ setup(
         "civitai",
         "python-dotenv",
         "ollama",
-        "openai"
+        "openai",
+        "groq"
     ],
     entry_points={
         'console_scripts': [
