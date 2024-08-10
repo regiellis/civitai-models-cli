@@ -1,5 +1,9 @@
 # Civitai CLI Manager
 
+> [!NOTE]
+Release 0.5.0 made the projecta  proper installable package and less of a stand-alone script. if you had a version before 0.5.0, it is recommended that you re-clone the repo and install the project
+with `pipx install .` or `pip install .`
+
 > [!WARNING]
 > This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future.
 
