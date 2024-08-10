@@ -1,6 +1,6 @@
 """
 ==========================================================
-Civitai Model Downloader - Simplified Model Retrieval
+Civitai Model Manager - Simplified Model Retrieval
 ==========================================================
 
 Simple CLI tool that streamlines the process of managing AI models from the
@@ -10,8 +10,9 @@ local storage. It also provides a summary of the model description using
 Ollama or OpenAI.
 
 Usage:
-$ pipx run file:civitai_model_manager.py [OPTIONS] [COMMAND] [ARGS]
-$ python civitai_model_manager.py [OPTIONS] [COMMAND] [ARGS]
+$ pipx install civitai-model-manager or pip install civitai-model-manager
+$ pip install . or pipx install . # To install the package locally
+$ civitai-model-manager [OPTIONS] [COMMAND] [ARGS]
 
 Options:
   list               List available models along with their types and paths.
@@ -19,16 +20,17 @@ Options:
   details INT        Get detailed information about a specific model by ID.
   download INT       Download a specific model variant by ID.
   remove             Remove specified models from local storage.
-  explain INT        Get a summary of a specific model by ID using Ollama.
+  explain INT        Get a summary of a specific model by ID using Ollama/OpenAI/Groq.
   --help             Show this message and exit.
 
 Examples:
-$ python civitai_model_manager.py --list
-$ python civitai_model_manager.py --stats
-$ python civitai_model_manager.py --details 12345 [--desc] [--images]
-$ python civitai_model_manager.py --download 54321 [--select]
-$ python civitai_model_manager.py --remove
-$ python civitai_model_manager.py --explain 12345 [--service ollama]
+
+$ civitai-cli-manager --list
+$ civitai-cli-manager --stats
+$ civitai-cli-manager --details 12345 [--desc] [--images]
+$ civitai-cli-manager --download 54321 [--select]
+$ civitai-cli-manager --remove
+$ civitai-cli-manager --explain 12345 [--service ollama]
 """
 
 # /// script
@@ -51,13 +53,14 @@ $ python civitai_model_manager.py --explain 12345 [--service ollama]
 import os
 import sys
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Final
 import requests
 import typer
 import html2text
 from platform import system
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
+from tqdm import tqdm
 from rich.console import Console
 from rich import print
 from rich.table import Table
@@ -66,7 +69,7 @@ from rich.markdown import Markdown
 from rich.traceback import install
 install()
 
-from tqdm import tqdm
+from .helpers import feedback_message, convert_kb, clean_text
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -101,15 +104,15 @@ def load_environment_variables(console: Console = Console()) -> None:
     feedback_message(".env file is missing. Please create one using the sample.env provided.", "warning")
 
 load_environment_variables(Console())
-MODELS_DIR = os.getenv("MODELS_DIR", "")
-CIVITAI_TOKEN = os.getenv("CIVITAI_TOKEN", "")
+MODELS_DIR: Final = os.getenv("MODELS_DIR", "")
+CIVITAI_TOKEN: Final = os.getenv("CIVITAI_TOKEN", "")
 
-CIVITAI_MODELS = "https://civitai.com/api/v1/models"
-CIVITAI_IMAGES = "https://civitai.com/api/v1/images"
-CIVITAI_VERSIONS = "https://civitai.com/api/v1/model-versions"
-CIVITAI_DOWNLOAD = "https://civitai.com/api/download/models"
+CIVITAI_MODELS: Final = "https://civitai.com/api/v1/models"
+CIVITAI_IMAGES: Final = "https://civitai.com/api/v1/images"
+CIVITAI_VERSIONS: Final = "https://civitai.com/api/v1/model-versions"
+CIVITAI_DOWNLOAD: Final = "https://civitai.com/api/download/models"
 
-TYPES = {
+TYPES: Final = {
     "Checkpoint": "checkpoints",
     "TextualInversion": "textual_inversions",
     "Hypernetwork": "hypernetworks",
@@ -119,7 +122,7 @@ TYPES = {
     "Poses": "poses"
 }
 
-OLLAMA_OPTIONS = {
+OLLAMA_OPTIONS: Final = {
     "model": os.getenv("OLLAMA_MODEL", ""),
     "api_base": os.getenv("OLLAMA_API_BASE", ""),
     "temperature": os.getenv("TEMP", 0.9),
@@ -205,7 +208,7 @@ def sanity_check() -> None:
     table = Table(title="Sanity Check")
     table.add_column("Check", style="cyan")
     table.add_column("Status", style="magenta")
-    table.add_column("Message", style="green")
+    table.add_column("Message", style="yellow")
     
     for check, status in CHECKS["REQUIRED"].items():
         if status:
@@ -216,42 +219,6 @@ def sanity_check() -> None:
     console.print(table)
     return None
 
-
-def clean_text(text: str) -> str:
-    return text.replace("\n", " ").replace("\r", " ").replace("\t", " ").strip()
-
-
-def convert_kb(kb: float) -> str:
-    if kb <= 0:
-        raise ValueError("Input must be a positive number.")
-    units = ["KB", "MB", "GB"]
-    i = 0
-    while kb >= 1024 and i < len(units) - 1: 
-        kb /= 1024.0  
-        i += 1
-
-    return f"{round(kb, 2)} {units[i]}"
-
-
-def feedback_message(message: str, type: str = "info") -> None:
-    options = {
-        "types": {
-            "info": "green",
-            "warning": "yellow",
-            "error": "red",
-        },
-        "titles": {
-            "info": "Information",
-            "warning": "Warning",
-            "error": "Error Message",
-        }
-    }
-
-    feedback_message_table = Table(style=options["types"][type])
-    feedback_message_table.add_column(options["titles"][type])
-    feedback_message_table.add_row(message)
-    console.print(feedback_message_table)
-    return None
 
 def list_models(model_dir: str) -> List[Tuple[str, str, str]]:
     models = []
@@ -363,7 +330,7 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                 "tags": response.get("tags", []),
                 "creator": response["creator"].get("username", ""),
                 "trainedWords": response["modelVersions"][0].get("trainedWords", "None"),
-                "nsfw": Text("Yes", style="green") if response.get("nsfw", False) else Text("No", style="bright_red"),
+                "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                 "metadata": {
                   "stats": f"{response["stats"].get("downloadCount", "")} downloads, {response["stats"].get('thumbsUpCount', '')} likes, {response["stats"].get('thumbsDownCount', '')} dislikes",
                   "size": convert_kb(response["modelVersions"][0].get("files")[0].get("sizeKB", "")),
@@ -401,7 +368,7 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                     "tags": parent_model_response.get("tags", []),
                     "creator": parent_model_response['creator'].get("username", "None"),
                     "trainedWords": response.get("trainedWords", "None"),
-                    "nsfw": Text("Yes", style="green") if response.get("nsfw", False) else Text("No", style="bright_red"),
+                    "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                     "download_url": response.get("downloadUrl", ""),
                     "metadata": {
                         "stats": f"{response["stats"].get("downloadCount", "")} downloads, {response["stats"].get('thumbsUpCount', '')} likes, {version_data["stats"].get('thumbsDownCount', '')} dislikes",
@@ -469,7 +436,7 @@ def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[
     feedback_message(f"Please select a version to download for model {model_name}.", "info")
     
     table = Table(title="Available Versions", title_justify="left")
-    table.add_column("Version ID", style="green")
+    table.add_column("Version ID", style="yellow")
     table.add_column("Version Name", style="cyan")
     table.add_column("Base Model", style="blue")
 
@@ -626,7 +593,7 @@ def list_models_cli():
 
     table = Table(title=f"Models of Type: {model_type}", title_justify="left")
     table.add_column("Model Name", style="cyan")
-    table.add_column("Path", style="green")
+    table.add_column("Path", style="yellow")
 
     for model in models_in_folder:
         table.add_row(model[0], model[2])
@@ -678,7 +645,7 @@ def get_model_details_cli(identifier: str, desc: bool = False, images: bool = Fa
 
         if model_details:
             model_table = Table(title_justify="left")
-            model_table.add_column("Attributes", style="green")
+            model_table.add_column("Attributes", style="yellow")
             model_table.add_column("Values", style="cyan")
             model_table.add_row("Model ID", str(model_details["id"]))
             model_table.add_row("Name", model_details["name"])
@@ -696,7 +663,7 @@ def get_model_details_cli(identifier: str, desc: bool = False, images: bool = Fa
             
             if versions != []:
                 version_table = Table(title_justify="left")
-                version_table.add_column("Version ID", style="green")
+                version_table.add_column("Version ID", style="yellow")
                 version_table.add_column("Name", style="cyan")
                 version_table.add_column("Base Model", style="blue")
                 version_table.add_column("Download URL", style="blue")
@@ -715,7 +682,7 @@ def get_model_details_cli(identifier: str, desc: bool = False, images: bool = Fa
             if model_details.get("images"):
                 images_table = Table(title_justify="left")
                 images_table.add_column("NSFW Lvl", style="bright_red")
-                images_table.add_column("URL", style="green")
+                images_table.add_column("URL", style="yellow")
 
                 
                 for image in model_details.get("images"):
@@ -813,7 +780,7 @@ def remove_models_cli():
     table = Table(title=f"Models of Type: {model_type}", title_justify="left")
     table.add_column("Model Name", style="cyan")
     table.add_column("Model Type", style="cyan")
-    table.add_column("Path", style="green")
+    table.add_column("Path", style="yellow")
     
 
     for model in models_in_folder:
@@ -852,7 +819,7 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
         return
 
     table = Table(title_justify="left")
-    table.add_column("ID", style="green")
+    table.add_column("ID", style="yellow")
     table.add_column("Name", style="cyan")
     table.add_column("Type", style="blue", )
     table.add_column("NSFW", style="magenta"),
@@ -882,18 +849,23 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
 def summarize_model_cli(identifier: str, service: str = "ollama"):
     """Get a summary of a specific model by ID using the specified service (default is Ollama)."""
     try:
-        model_id = int(identifier)
+        model = get_model_details(int(identifier))
+        model_id = model.get("id", "")
+        model_name = model.get("name", "")
         summary = summarize_model_description(model_id, service)
         
         summary_table = Table(title_justify="left")
-        summary_table.add_column(f"Summary of model {model_id} using {service}:", style="cyan")
+        summary_table.add_column(f"Summary of model {model_name}/{model_id} using {service}:", style="cyan")
         summary_table.add_row(summary)
         
         console.print(summary_table)
     except ValueError:
         feedback_message("Invalid model ID. Please enter a valid number.", "error")
 
-if __name__ == "__main__":
-    sys.argv.append("--help") if len(sys.argv) == 1 else None
+
+def main():
+    if len(sys.argv) == 1: sys.argv.append("--help")
     app()
 
+if __name__ == "__main__":
+    main()

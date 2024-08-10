@@ -1,11 +1,12 @@
-# Civitai Model Manager
+# Civitai CLI Manager
 
 > [!WARNING]
 > This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future.
 
 ## Overview
 
-**Civitai Model Manager** is a Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **CivitaiAI platform**. This came about as a solution to my own frustrations with the cumbersome Civitai website interface, which often felt slow and required an excessive number of clicks to download mode or inspect models.
+**Civitai CLI Manager** is an unofficial Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **Civitai platform**. This came about as a solution to quickly working with and manage models out
+side the main site.
 
 I initially intended for this to be just a module in a larger **Comfy CLI** toolset, but I found it so useful in its standalone format that I decided to share it with anyone who might feel the same way.
 
@@ -13,7 +14,8 @@ I initially intended for this to be just a module in a larger **Comfy CLI** tool
 
 ## Why
 
-The main reason I developed this tool was to address my own challenges: navigating through numerous clicks and waiting for slow downloads on the website. I needed a more efficient way to organize and manage my AI models, and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary via the Ollama(OpenAI), OpenAI or Groq if you choose. It is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description that may not be in your native language.
+I needed a more efficient way to download, organize and manage my AI models from the site and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary 
+via the Ollama(OpenAI), OpenAI or Groq if you choose. It is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description that may not be in your native language.
 
 ## Key Features
 
@@ -31,29 +33,23 @@ The main reason I developed this tool was to address my own challenges: navigati
 
 - **Summarized Descriptions**: Get summaries of specific models by using 3 different LLMs for enhanced understanding.
 
-## Installation
+## Installation (Recommended)
 
 You have a couple of options for installing/running the tool:
 
 ### Install [pipx](https://pipxproject.github.io/pipx/installation/), then run the tool with the following command
 
+
 ```bash
-pipx run file:comfy_model_manager.py [OPTIONS]
+pipx install .
 ```
 
 ### Alternatively, you can install using `pip`
 
-You can also install the required dependencies using the `setup.py` file or the `requirements.txt`. To do this, simply clone the repository and run:
-
 ```bash
-pip install -r requirements.txt
+pip install .
 ```
 
-or
-
-```bash
-python setup.py install
-```
 
 Run tests with:
 
@@ -98,24 +94,26 @@ You can also grab the ID from the Civitai... The model ID is the number in the U
 
 ### Available Commands
 
+Once installed via pipx or pip:
+
 ```bash
 # List all available models
-python civitai_model_manager.py --list
+civitai-cli-manager --list
 
 # Statistically summarize all models
-python civitai_model_manager.py --stats
+civitai-cli-manager --stats
 
 # Get detailed information about a specific model [display images or description]
-python civitai_model_manager.py --details 12345 [--images | --desc]
+civitai-cli-manager --details 12345 [--images | --desc]
 
 # Download a specific model variant [select flag will prompt you to select a model]
-python civitai_model_manager.py --download 54321 [--select]
+civitai-cli-manager --download 54321 [--select]
 
 # Remove models from local storage
-python civitai_model_manager.py --remove
+civitai-cli-manager --remove
 
 # Get a summary of a specific model with a options to select a LLM [--service ollama | openai | groq]
-python civitai_model_manager.py --explain 12345 [--service ollama | openai | groq]
+civitai-cli-manager --explain 12345 [--service ollama | openai | groq]
 ```
 
 ## Dependencies
