@@ -332,7 +332,7 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                 "trainedWords": response["modelVersions"][0].get("trainedWords", "None"),
                 "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                 "metadata": {
-                  "stats": f"{response["stats"].get("downloadCount", "")} downloads, {response["stats"].get('thumbsUpCount', '')} likes, {response["stats"].get('thumbsDownCount', '')} dislikes",
+                  "stats": f"{response['stats'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {response['stats'].get('thumbsDownCount', '')} dislikes",
                   "size": convert_kb(response["modelVersions"][0].get("files")[0].get("sizeKB", "")),
                   "format": response["modelVersions"][0].get("files")[0].get("metadata", "").get("format", ".safetensors"),
                   "file": response["modelVersions"][0].get("files")[0].get("name", ""),
@@ -371,7 +371,7 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                     "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                     "download_url": response.get("downloadUrl", ""),
                     "metadata": {
-                        "stats": f"{response["stats"].get("downloadCount", "")} downloads, {response["stats"].get('thumbsUpCount', '')} likes, {version_data["stats"].get('thumbsDownCount', '')} dislikes",
+                        "stats": f"{response['stat'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {version_data['stats'].get('thumbsDownCount', '')} dislikes",
                         "size": convert_kb(response["files"][0].get("sizeKB", "")),
                         "format": response["files"][0].get("metadata").get("format", ".safetensors"),
                         "file": response["files"][0].get("name", ""),
@@ -522,7 +522,7 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
                 model=OLLAMA_OPTIONS["model"],
                 messages=[
                     {"role": "assistant", "content": OLLAMA_OPTIONS["system_template"]},
-                    {"role": "user", "content": f"{OLLAMA_OPTIONS["system_template"]} {description}"}
+                    {"role": "user", "content": f"{OLLAMA_OPTIONS['system_template']} {description}"}
                     # consider adding the system template
                     # to the prompt since not all models follow the system template
                 ],

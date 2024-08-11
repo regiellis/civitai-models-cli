@@ -18,10 +18,19 @@ classifiers = [
    "License :: OSI Approved :: Apache Software License",
    "Operating System :: OS Independent"
 ]
-dynamic = ["dependencies"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+   "typer",
+   "rich",
+   "requests",
+   "shellingham",
+   "html2text",
+   "tqdm",
+   "civitai",
+   "python-dotenv",
+   "ollama",
+   "openai",
+   "groq"
+]
 
 [tool.setuptools]
 packages = ["civitai_model_manager"]
