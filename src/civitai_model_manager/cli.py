@@ -53,10 +53,14 @@ $ civitai-cli-manager --explain 12345 [--service ollama]
 import os
 import sys
 import json
+import re
+
 from typing import Any, Dict, List, Optional, Tuple, Final
 import requests
 import typer
 import html2text
+import inquirer
+
 from platform import system
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
@@ -69,7 +73,8 @@ from rich.markdown import Markdown
 from rich.traceback import install
 install()
 
-from .helpers import feedback_message, convert_kb, clean_text
+from .components.helpers import feedback_message
+from .components.utils import convert_kb, clean_text
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -114,13 +119,23 @@ CIVITAI_DOWNLOAD: Final = "https://civitai.com/api/download/models"
 
 TYPES: Final = {
     "Checkpoint": "checkpoints",
-    "TextualInversion": "textual_inversions",
+    "TextualInversion": "embeddings",
     "Hypernetwork": "hypernetworks",
-    "AestheticGradient": "aesthetic_gradients",
+    "AestheticGradient": "aesthetic_embeddings",
     "LORA": "loras",
-    "Controlnet": "controlnets",
-    "Poses": "poses"
+    "LoCon": "models/Lora",
+    "Controlnet": "controlnet",
+    "Poses": "poses",
+    "Upscaler": "esrgan",
+    "MotionModule": "motion_module",
+    "VAE": "VAE",
+    "Wildcards": "wildcards",
+    "Workflows": "workflows",
+    "Other": "other"
 }
+
+MODEL_TYPES = ["SDXL 1.0", "SDXL 0.9", "SD 1.5", "SD 1.4", "SD 2.0", "SD 2.0 768", "SD 2.1", "SD 2.1 768", "Other"]
+# MODEL_TYPES = ["Checkpoint", "TextualInversion", "Hypernetwork", "AestheticGradient", "LORA", "LoCon", "Controlnet", "Poses", "Upscaler", "MotionModule", "VAE", "Poses", "Wildcards", "Workflows", "Other"]
 
 OLLAMA_OPTIONS: Final = {
     "model": os.getenv("OLLAMA_MODEL", ""),
@@ -371,7 +386,7 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                     "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                     "download_url": response.get("downloadUrl", ""),
                     "metadata": {
-                        "stats": f"{response['stat'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {version_data['stats'].get('thumbsDownCount', '')} dislikes",
+                        "stats": f"{response['stats'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {version_data['stats'].get('thumbsDownCount', '')} dislikes",
                         "size": convert_kb(response["files"][0].get("sizeKB", "")),
                         "format": response["files"][0].get("metadata").get("format", ".safetensors"),
                         "file": response["files"][0].get("name", ""),
@@ -406,7 +421,8 @@ def download_model(model_id: int, model_details: Dict[str, Any], select: bool = 
             "name": model_details.get("name", ""),
             "base_model": model_details.get("base_model", ""),
             "download_url": model_details.get("download_url", ""),
-            "images": model_details["images"][0].get("url", "")
+            "images": model_details["images"][0].get("url", ""),
+            "file": model_meta.get("file", "")
         }
     else:
         if model_details.get("parent_id"):
@@ -423,10 +439,12 @@ def download_model(model_id: int, model_details: Dict[str, Any], select: bool = 
     download_url = f"{CIVITAI_DOWNLOAD}/{selected_version['id']}?token={CIVITAI_TOKEN}"
     model_folder = get_model_folder(model_type)
     model_path = os.path.join(model_folder, selected_version.get('base_model', ''), f"{selected_version.get('file')}")
+    
 
     if os.path.exists(model_path):
         feedback_message(f"Model {model_name} already exists at {model_path}. Skipping download.", "warning")
         return None
+    
 
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     return download_file(download_url, model_path, model_name)
