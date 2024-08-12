@@ -45,3 +45,21 @@ def convert_kb(kb: float) -> str:
         i += 1
 
     return f"{round(kb, 2)} {units[i]}"
+
+def safe_get(collection, keys, default=None):
+    """_summary_
+
+    Args:
+        collection (_type_): _description_
+        keys (_type_): _description_
+        default (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    for key in keys:
+        try:
+            collection = collection[key]
+        except (KeyError, IndexError, TypeError):
+            return default
+    return collection

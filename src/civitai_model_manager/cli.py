@@ -42,6 +42,7 @@ $ civitai-cli-manager --explain 12345 [--service ollama]
 #   "shellingham",
 #   "html2text",
 #   "tqdm",
+#   "inquirer",
 #   "civitai",
 #   "python-dotenv",
 #   "ollama",
@@ -62,6 +63,7 @@ import html2text
 import inquirer
 
 from platform import system
+from collections import defaultdict
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from tqdm import tqdm
@@ -74,7 +76,7 @@ from rich.traceback import install
 install()
 
 from .components.helpers import feedback_message
-from .components.utils import convert_kb, clean_text
+from .components.utils import convert_kb, clean_text, safe_get
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -341,19 +343,21 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                 "name": response.get("name", ""),
                 "description": response.get("description", ""),
                 "type": response.get("type", ""),
-                "download_url": response["modelVersions"][0].get("downloadUrl", ""),
+                "download_url": safe_get(response, ["modelVersions", 0, "downloadUrl"], ""),
                 "tags": response.get("tags", []),
-                "creator": response["creator"].get("username", ""),
-                "trainedWords": response["modelVersions"][0].get("trainedWords", "None"),
+                "creator": safe_get(response, ["creator", "username"], ""),
+                "trainedWords": safe_get(response, ["modelVersions", 0, "trainedWords"], "None"),
                 "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                 "metadata": {
-                  "stats": f"{response['stats'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {response['stats'].get('thumbsDownCount', '')} dislikes",
-                  "size": convert_kb(response["modelVersions"][0].get("files")[0].get("sizeKB", "")),
-                  "format": response["modelVersions"][0].get("files")[0].get("metadata", "").get("format", ".safetensors"),
-                  "file": response["modelVersions"][0].get("files")[0].get("name", ""),
+                    "stats": f"{safe_get(response, ['stats', 'downloadCount'], '')} downloads, "
+                            f"{safe_get(response, ['stats', 'thumbsUpCount'], '')} likes, "
+                            f"{safe_get(response, ['stats', 'thumbsDownCount'], '')} dislikes",
+                    "size": convert_kb(safe_get(response, ["modelVersions", 0, "files", 0, "sizeKB"], "")),
+                    "format": safe_get(response, ["modelVersions", 0, "files", 0, "metadata", "format"], ".safetensors"),
+                    "file": safe_get(response, ["modelVersions", 0, "files", 0, "name"], ""),
                 },
                 "versions": versions,
-                "images": response["modelVersions"][0]["images"]
+                "images": safe_get(response, ["modelVersions", 0, "images"], []),
             }
         else:
             request = requests.get(f"{CIVITAI_VERSIONS}/{model_id}")
@@ -375,21 +379,23 @@ def get_model_details(model_id: int) -> Dict[str, Any]:
                 return {
                     "id": response.get("id", ""),
                     "parent_id": response.get("modelId", "None"),
-                    "parent_name": response["model"].get("name", "None"),
+                    "parent_name": safe_get(response, ["model", "name"], "None"),
                     "name": response.get("name", "None"),
                     "description": parent_model_response.get("description", "None"),
-                    "type": response["model"].get("type", "None"),
+                    "type": safe_get(response, ["model", "type"], "None"),
                     "base_model": response.get("baseModel", ""),
                     "tags": parent_model_response.get("tags", []),
-                    "creator": parent_model_response['creator'].get("username", "None"),
+                    "creator": safe_get(parent_model_response, ["creator", "username"], "None"),
                     "trainedWords": response.get("trainedWords", "None"),
                     "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
                     "download_url": response.get("downloadUrl", ""),
                     "metadata": {
-                        "stats": f"{response['stats'].get('downloadCount', '')} downloads, {response['stats'].get('thumbsUpCount', '')} likes, {version_data['stats'].get('thumbsDownCount', '')} dislikes",
-                        "size": convert_kb(response["files"][0].get("sizeKB", "")),
-                        "format": response["files"][0].get("metadata").get("format", ".safetensors"),
-                        "file": response["files"][0].get("name", ""),
+                        "stats": f"{safe_get(response, ['stats', 'downloadCount'], '')} downloads, "
+                                f"{safe_get(response, ['stats', 'thumbsUpCount'], '')} likes, "
+                                f"{safe_get(version_data, ['stats', 'thumbsDownCount'], '')} dislikes",
+                        "size": convert_kb(safe_get(response, ["files", 0, "sizeKB"], "")),
+                        "format": safe_get(response, ["files", 0, "metadata", "format"], ".safetensors"),
+                        "file": safe_get(response, ["files", 0, "name"], ""),
                     },
                     "versions": [],
                     "images": version_data.get("images", [])
@@ -839,9 +845,9 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
     table = Table(title_justify="left")
     table.add_column("ID", style="yellow")
     table.add_column("Name", style="cyan")
-    table.add_column("Type", style="blue", )
-    table.add_column("NSFW", style="magenta"),
-    table.add_column("Tags", style="magenta")
+    table.add_column("Type", style="white", )
+    table.add_column("NSFW", style="bright_red"),
+    table.add_column("Tags", style="white")
 
     for model in models.get("items"):
         name = Text(clean_text(model["name"]), style="bold", overflow="ellipsis")
