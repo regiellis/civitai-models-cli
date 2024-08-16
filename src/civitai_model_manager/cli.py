@@ -76,8 +76,10 @@ from rich.traceback import install
 install()
 
 from .components.helpers import feedback_message, get_model_folder
+from .components.tools import sanity_check_cli
 from .components.utils import convert_kb, clean_text, safe_get
-from .components.stats import count_models, get_model_sizes, inspect_models_cli
+from .components.stats import inspect_models_cli
+from .components.details import get_model_details_cli, get_model_details
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -186,58 +188,6 @@ h2t = html2text.HTML2Text()
 app = typer.Typer()
 
 
-# TODO: More robust logic checks...this is just a basic check
-def sanity_check() -> None:
-    CHECKS = {
-        "REQUIRED": {
-            "MODELS_DIR": False,
-            "CIVITAI_TOKEN": False,
-            "WRITE_PERMISSION": False,
-            "API_AVAILABILITY": False,
-        },            
-        "OPTIONAL": {
-            "OLLAMA_ACCESSIBLE": False,
-            "OPENAI_ACCESSIBLE": False,
-            "MODEL_AVAILABILITY": False,
-        }
-    }
-    
-    if MODELS_DIR:
-        CHECKS["REQUIRED"]["MODELS_DIR"] = True
-        if os.path.exists(MODELS_DIR):
-            CHECKS["REQUIRED"]["WRITE_PERMISSION"] = os.access(MODELS_DIR, os.W_OK)
-        else:
-            CHECKS["REQUIRED"]["WRITE_PERMISSION"] = False
-    else:
-        CHECKS["REQUIRED"]["MODELS_DIR"] = False
-        
-    if CIVITAI_TOKEN:
-        CHECKS["REQUIRED"]["CIVITAI_TOKEN"] = True
-    else:
-        CHECKS["REQUIRED"]["CIVITAI_TOKEN"] = False
-        
-    # 200 status code indicates that the API is accessible
-    response = requests.get(CIVITAI_MODELS)
-    if response.status_code == 200:
-        CHECKS["REQUIRED"]["API_AVAILABILITY"] = True
-    else:
-        CHECKS["REQUIRED"]["API_AVAILABILITY"] = False
-
-    table = Table(title="Sanity Check")
-    table.add_column("Check", style="cyan")
-    table.add_column("Status", style="magenta")
-    table.add_column("Message", style="yellow")
-    
-    for check, status in CHECKS["REQUIRED"].items():
-        if status:
-            table.add_row(check, "Pass", "Good to go!", style="green")
-        else:
-            table.add_row(check, "Fail", f"{check} Failed, Required to run CMM", style="bright_red")
-            
-    console.print(table)
-    return None
-
-
 def list_models(model_dir: str) -> List[Tuple[str, str, str]]:
     models = []
     for root, _, files in os.walk(model_dir):
@@ -267,7 +217,7 @@ def search_models(query: str = "", **kwargs) -> List[Dict[str, Any]]:
 
     def validate_param(key, valid_values) -> bool:
         if key in kwargs and kwargs[key] not in valid_values and kwargs[key] is not None:
-            table = Table(style="yellow")
+            table = Table(style="bright_yellow")
             table.add_column("Invalid " + key.capitalize())
             table.add_row(f"\"{kwargs[key]}\" is not a valid {key}.\n Please choose from: {', '.join(valid_values)}")
             console.print(table)
@@ -288,93 +238,7 @@ def search_models(query: str = "", **kwargs) -> List[Dict[str, Any]]:
     return []
 
 
-def get_model_details(model_id: int) -> Dict[str, Any]:
-    
-    try:
-        if not model_id:
-            feedback_message("Please provide a valid model ID.", "error")
-            return {}
-        
-        request = requests.get(f"{CIVITAI_MODELS}/{model_id}")
-        if request.status_code == 200:
-            response = request.json()
 
-            versions = [{
-                "id": version.get("id", ""),
-                "name": version.get("name", ""),
-                "base_model": version.get("baseModel", ""),
-                "download_url": version.get("files")[0].get("downloadUrl", ""),
-                "images": version.get("images")[0].get('url', ""),
-                "file": version.get("files")[0].get("name", "")
-            } for version in response["modelVersions"]]
-            
-            return {
-                "id": response.get("id", ""),
-                "name": response.get("name", ""),
-                "description": response.get("description", ""),
-                "type": response.get("type", ""),
-                "download_url": safe_get(response, ["modelVersions", 0, "downloadUrl"], ""),
-                "tags": response.get("tags", []),
-                "creator": safe_get(response, ["creator", "username"], ""),
-                "trainedWords": safe_get(response, ["modelVersions", 0, "trainedWords"], "None"),
-                "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
-                "metadata": {
-                    "stats": f"{safe_get(response, ['stats', 'downloadCount'], '')} downloads, "
-                            f"{safe_get(response, ['stats', 'thumbsUpCount'], '')} likes, "
-                            f"{safe_get(response, ['stats', 'thumbsDownCount'], '')} dislikes",
-                    "size": convert_kb(safe_get(response, ["modelVersions", 0, "files", 0, "sizeKB"], "")),
-                    "format": safe_get(response, ["modelVersions", 0, "files", 0, "metadata", "format"], ".safetensors"),
-                    "file": safe_get(response, ["modelVersions", 0, "files", 0, "name"], ""),
-                },
-                "versions": versions,
-                "images": safe_get(response, ["modelVersions", 0, "images"], []),
-            }
-        else:
-            request = requests.get(f"{CIVITAI_VERSIONS}/{model_id}")
-            if request.status_code == 200:
-                response = request.json()
-                
-                # TODO: Refactor to not make a second request(unnecessary) or place in a function
-                # TODO: to avoid code duplication. Maybe sort the data from the versions dict
-                parent_model_request = requests.get(f"{CIVITAI_MODELS}/{response.get('modelId')}")
-                parent_model_response = parent_model_request.json()
-                version_data = parent_model_response['modelVersions']
-                
-                #search for the version data for an id
-                for version in version_data:
-                    if version.get("id") == response.get("id", ""):
-                        version_data = version
-                        break
-
-                return {
-                    "id": response.get("id", ""),
-                    "parent_id": response.get("modelId", "None"),
-                    "parent_name": safe_get(response, ["model", "name"], "None"),
-                    "name": response.get("name", "None"),
-                    "description": parent_model_response.get("description", "None"),
-                    "type": safe_get(response, ["model", "type"], "None"),
-                    "base_model": response.get("baseModel", ""),
-                    "tags": parent_model_response.get("tags", []),
-                    "creator": safe_get(parent_model_response, ["creator", "username"], "None"),
-                    "trainedWords": response.get("trainedWords", "None"),
-                    "nsfw": Text("Yes", style="yellow") if response.get("nsfw", False) else Text("No", style="bright_red"),
-                    "download_url": response.get("downloadUrl", ""),
-                    "metadata": {
-                        "stats": f"{safe_get(response, ['stats', 'downloadCount'], '')} downloads, "
-                                f"{safe_get(response, ['stats', 'thumbsUpCount'], '')} likes, "
-                                f"{safe_get(version_data, ['stats', 'thumbsDownCount'], '')} dislikes",
-                        "size": convert_kb(safe_get(response, ["files", 0, "sizeKB"], "")),
-                        "format": safe_get(response, ["files", 0, "metadata", "format"], ".safetensors"),
-                        "file": safe_get(response, ["files", 0, "name"], ""),
-                    },
-                    "versions": [],
-                    "images": version_data.get("images", [])
-                }
-    except requests.RequestException as e:
-        feedback_message(f"Failed to get model details for model ID: {model_id} // {e}", "error")
-        return {}
-    
-    return
     
 
 def download_model(model_id: int, model_details: Dict[str, Any], select: bool = False) -> Optional[str]:
@@ -430,7 +294,7 @@ def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[
     feedback_message(f"Please select a version to download for model {model_name}.", "info")
     
     table = Table(title="Available Versions", title_justify="left")
-    table.add_column("Version ID", style="yellow")
+    table.add_column("Version ID", style="bright_yellow")
     table.add_column("Version Name", style="cyan")
     table.add_column("Base Model", style="blue")
 
@@ -477,7 +341,7 @@ def remove_model(model_path: str) -> bool:
         feedback_message(f"This is a desctructive operation and cannot be undone. Please proceed with caution.", "warning")
         confirmation = typer.confirm(f"Are you sure you want to remove the model at {model_path}? (Y/N): ", abort=True)
         if confirmation:
-            console.print(f"Removing model at {model_path}...", style="yellow")
+            console.print(f"Removing model at {model_path}...", style="bright_yellow")
             total_size = os.path.getsize(model_path)  
             with tqdm(total=total_size, unit='B', unit_scale=True, desc="Removing Model", colour="magenta") as progress_bar:
                 # Attempt to delete the model
@@ -496,6 +360,7 @@ def remove_model(model_path: str) -> bool:
         feedback_message(f"No model found at {model_path}.", "warning")
     return False
 
+
 # TODO: Fix the markdown output
 def summarize_model_description(model_id: int, service: str) -> Optional[str]:
     """Summarize the model description using the specified API service."""
@@ -510,7 +375,7 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
                     {"role": "assistant", "content": OLLAMA_OPTIONS["system_template"]},
                     {"role": "user", "content": f"{OLLAMA_OPTIONS['system_template']} {description}"}
                     # consider adding the system template
-                    # to the prompt since not all models follow the system template
+                    # to the prompt since not all models follow it
                 ],
                 options={"temperature": float(OLLAMA_OPTIONS["temperature"]), "top_p": float(OLLAMA_OPTIONS["top_p"])},
                 keep_alive=0 # Free up the VRAM
@@ -546,10 +411,8 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
         return None
 
 
-@app.command("sanity")
-def sanity_check_cli():
-    """Check if the script is ready to run by verifying the required environment variables. BASIC!!!"""
-    sanity_check()
+@app.command("sanity-check", help="Check to see if the app is ready to run.")
+def sanity_check_command(): return sanity_check_cli()
 
 
 @app.command("list")
@@ -574,12 +437,12 @@ def list_models_cli():
     models_in_folder = list_models(model_folder)
 
     if not models_in_folder:
-        console.print(f"No models found for type {model_type}.", style="yellow")
+        console.print(f"No models found for type {model_type}.", style="bright_yellow")
         return
 
     table = Table(title=f"Models of Type: {model_type}", title_justify="left")
     table.add_column("Model Name", style="cyan")
-    table.add_column("Path", style="yellow")
+    table.add_column("Path", style="bright_yellow")
 
     for model in models_in_folder:
         table.add_row(model[0], model[2])
@@ -592,97 +455,8 @@ def stats_command(): return inspect_models_cli(MODELS_DIR)
 
 
 @app.command("details", help="Get detailed information about a specific model by ID.")
-def get_model_details_cli(identifier: str, desc: bool = False, images: bool = False):
-    """Get detailed information about a specific model by ID."""
-    try:
-        model_id = int(identifier)
-        model_details = get_model_details(model_id)
-
-        if model_details:
-            model_table = Table(title_justify="left")
-            model_table.add_column("Attributes", style="yellow")
-            model_table.add_column("Values", style="cyan")
-            model_table.add_row("Model ID", str(model_details["id"]))
-            model_table.add_row("Name", model_details["name"])
-            model_table.add_row("Type", model_details["type"])
-            model_table.add_row("Tags", ", ".join(model_details.get("tags", [])))
-            model_table.add_row("Creator", model_details["creator"])
-            model_table.add_row("NSFW", model_details["nsfw"])
-
-            if desc:
-                desc_table = Table(title_justify="left", width=200)
-                desc_table.add_column("Description", style="cyan")
-                desc_table.add_row(h2t.handle(model_details["description"]))
-            
-            versions = model_details.get("versions", [])
-            
-            if versions != []:
-                version_table = Table(title_justify="left")
-                version_table.add_column("Version ID", style="yellow")
-                version_table.add_column("Name", style="cyan")
-                version_table.add_column("Base Model", style="blue")
-                version_table.add_column("Download URL", style="blue")
-                version_table.add_column("Images", style="blue")
-
-                for version in versions:
-                    version_table.add_row(
-                        str(version["id"]),
-                        version["name"],
-                        version["base_model"],
-                        version["download_url"],
-                        version["images"]
-                    )
-
-                    
-            if model_details.get("images"):
-                images_table = Table(title_justify="left")
-                images_table.add_column("NSFW Lvl", style="bright_red")
-                images_table.add_column("URL", style="yellow")
-
-                
-                for image in model_details.get("images"):
-                    images_table.add_row(str(image.get("nsfwLevel")), image.get("url"))
-
-            console.print(model_table)
-            if desc:
-                console.print(desc_table)
-            if versions != []:
-                console.print(version_table)
-            if images and not model_details.get("parent_id"):
-                console.print(images_table)
-            if model_details.get("parent_id"):
-                console.print(images_table)
-                feedback_message(f"{model_details['name']} is a variant of {model_details['parent_name']} // Model ID: {model_details['parent_id']}", "warning")
-                
-            if images == []:
-                feedback_message(f"No images available for model {model_details['name']}.", "warning")
-                
-            if versions == [] and not model_details.get("parent_id"):
-                feedback_message(f"No versions available for model {model_details['name']}.", "warning")
-                
-            # Prompt for model id to download
-            model_id = typer.prompt("Enter the model ID to download model or \"search\" for a quick search by tags; \"cancel\" to cancel", default="")
-            if model_id == "cancel":
-                return
-            
-            if model_id == "search":
-                # Ask user for args to search
-                query = typer.prompt("Enter a query or tag to search for a models, seperate tags by ','", default="")
-                search_cli(query=query, tags=query.split(","))
-                return
-            else:
-                download_model_cli(model_id)
-                return
-        else:
-            table = Table(style="bright_red")
-            table.add_column("Error Message")
-            table.add_row(f"No model found with ID: {identifier}.")
-            console.print(table)
-    except ValueError:
-        table = Table(title="Invalid model ID. Please enter a valid number", style="bright_red", title_justify="left")
-        table.add_column("Error Message")
-        table.add_row(str(ValueError))
-        console.print(table)
+def details_command(identifier: str, desc: bool = False, images: bool = False):
+    get_model_details_cli(identifier, desc, images,  CIVITAI_MODELS, CIVITAI_VERSIONS)
 
 
 @app.command("download", help="Download a specific model variant by ID.")
@@ -735,7 +509,7 @@ def remove_models_cli():
     table = Table(title=f"Models of Type: {model_type}", title_justify="left")
     table.add_column("Model Name", style="cyan")
     table.add_column("Model Type", style="cyan")
-    table.add_column("Path", style="yellow")
+    table.add_column("Path", style="bright_yellow")
     
 
     for model in models_in_folder:
@@ -770,11 +544,11 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
     #print(metadata)
 
     if not models:
-        console.print("No models found.", style="yellow")
+        console.print("No models found.", style="bright_yellow")
         return
 
     table = Table(title_justify="left")
-    table.add_column("ID", style="yellow")
+    table.add_column("ID", style="bright_yellow")
     table.add_column("Name", style="cyan")
     table.add_column("Type", style="white", )
     table.add_column("NSFW", style="bright_red"),

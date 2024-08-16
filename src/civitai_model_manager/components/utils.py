@@ -11,6 +11,7 @@ import os
 import sys
 import json
 
+from urllib.parse import urlparse, urlunparse, quote
 
 def clean_text(text: str) -> str:
     """_summary_
@@ -63,3 +64,8 @@ def safe_get(collection, keys, default=None):
         except (KeyError, IndexError, TypeError):
             return default
     return collection
+
+
+def safe_url(url: str) -> str:
+    parts = urlparse(url)
+    return urlunparse(parts._replace(path=quote(parts.path)))

@@ -16,8 +16,8 @@ from rich.console import Console
 from rich import print
 from rich.table import Table
 
-console = Console(soft_wrap=True)
 
+console = Console(soft_wrap=True)
 
 def feedback_message(message: str, type: str = "info") -> None:
     """_summary_
@@ -55,3 +55,18 @@ def get_model_folder(models_dir: str, model_type: str, ref_types: dict) -> str:
         selected_folder = typer.prompt("Enter the folder name to download the model:", default="unknown")
         return os.path.join(models_dir, selected_folder)
     return os.path.join(models_dir, ref_types[model_type])
+
+
+def create_table(title: str, columns: list) -> Table:
+    table = Table(title=title, title_justify="left")
+    for col_name, style in columns:
+        table.add_column(col_name, style=style)
+    return table
+
+
+def add_rows_to_table(table: Table, data: Dict[str, Any]) -> None:
+    for key, value in data.items():
+        if isinstance(value, list):
+            value = ", ".join(map(str, value))
+        table.add_row(key, str(value))
+    
