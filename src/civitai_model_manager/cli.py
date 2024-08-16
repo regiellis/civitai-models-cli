@@ -75,8 +75,9 @@ from rich.markdown import Markdown
 from rich.traceback import install
 install()
 
-from .components.helpers import feedback_message
+from .components.helpers import feedback_message, get_model_folder
 from .components.utils import convert_kb, clean_text, safe_get
+from .components.stats import count_models, get_model_sizes, inspect_models_cli
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -136,8 +137,8 @@ TYPES: Final = {
     "Other": "other"
 }
 
-MODEL_TYPES = ["SDXL 1.0", "SDXL 0.9", "SD 1.5", "SD 1.4", "SD 2.0", "SD 2.0 768", "SD 2.1", "SD 2.1 768", "Other"]
-# MODEL_TYPES = ["Checkpoint", "TextualInversion", "Hypernetwork", "AestheticGradient", "LORA", "LoCon", "Controlnet", "Poses", "Upscaler", "MotionModule", "VAE", "Poses", "Wildcards", "Workflows", "Other"]
+FILE_TYPES = (".safetensors", ".pt", ".pth", ".ckpt")
+MODEL_TYPES: Final = ["SDXL 1.0", "SDXL 0.9", "SD 1.5", "SD 1.4", "SD 2.0", "SD 2.0 768", "SD 2.1", "SD 2.1 768", "Other"]
 
 OLLAMA_OPTIONS: Final = {
     "model": os.getenv("OLLAMA_MODEL", ""),
@@ -146,17 +147,17 @@ OLLAMA_OPTIONS: Final = {
     "top_p": os.getenv("TOP_P", 0.3),
     "html_output": os.getenv("HTML_OUT", False),
     "system_template": (
-        "You are an expert in giving detailed explanations of description you are provided. Do not present it"
-        "like an update log. Make sure to explains the full description in a way that is easy to understand. "
-        "The description is not provided by the user but comes from the CivitAI API, so don't make recommendations on how to "
-        "improve the description, just be detailed, clear and thorough about the provided content. "
-        "Include recommended settings and tip if it appears in the description:\n"
-        " - Tips on Usage\n"
+        "You are an expert in giving detailed explanations of description you are provided. Do not present it "
+        "like an update log. Make sure to explains the full description in a clear and concise manner. "
+        "The description is provided by the CivitAI API and not written by the user, so don't make recommendations "
+        "on how to improve the description, just be detailed, clear and thorough about the provided content. "
+        "Include information on recommended settings and tip if they appear in the description:\n "
+        "- Tips on Usage\n"
         "- Sampling method\n"
         "- Schedule type\n"
         "- Sampling steps\n"
         "- CFG Scale\n"
-        "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!!\n"
+        "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!"
         "Return the description in Markdown format.\n\n"
         "You will find the description below: \n\n"
     )
@@ -183,7 +184,7 @@ Groq = GroqClient(api_key=GROQ_OPTIONS["api_key"]) if GROQ_OPTIONS["api_key"] el
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
 app = typer.Typer()
-FILE_TYPES=(".safetensors", ".pt", ".pth", ".ckpt")
+
 
 # TODO: More robust logic checks...this is just a basic check
 def sanity_check() -> None:
@@ -248,37 +249,6 @@ def list_models(model_dir: str) -> List[Tuple[str, str, str]]:
                 models.append((model_name, model_type, model_path))
     return models
 
-
-def count_models(model_dir: str) -> Dict[str, int]:
-    model_counts = {}
-    for root, _, files in os.walk(model_dir):
-        # Get the top-level directory name
-        top_level_dir = os.path.relpath(root, model_dir).split(os.sep)[0]
-        for file in files:
-            if file.endswith(FILE_TYPES):
-                #print(f"Found model file: {file} in directory: {root}")  Debugging statement
-                if top_level_dir in model_counts:
-                    model_counts[top_level_dir] += 1
-                else:
-                    model_counts[top_level_dir] = 1
-    return model_counts
-
-
-def get_model_sizes(model_dir: str) -> Dict[str, str]:
-    model_sizes = {}
-    for root, _, files in os.walk(model_dir):
-        for file in files:
-            if file.endswith(FILE_TYPES):
-                model_path = os.path.join(root, file)
-                size_in_bytes = os.path.getsize(model_path)
-                size_in_mb = size_in_bytes / (1024 * 1024)
-                size_in_gb = size_in_bytes / (1024 * 1024 * 1024)
-
-                size_str = f"{size_in_mb:.2f} MB ({size_in_gb:.2f} GB)" if size_in_gb >= 1 else f"{size_in_mb:.2f} MB"
-
-                model_name = os.path.basename(file)
-                model_sizes[model_name] = size_str
-    return model_sizes
 
 # Search for models by query, tag, or types,  which are optional via the api
 def search_models(query: str = "", **kwargs) -> List[Dict[str, Any]]:
@@ -443,7 +413,7 @@ def download_model(model_id: int, model_details: Dict[str, Any], select: bool = 
 
     # model_name = f"{model_name}_{selected_version['name'].replace('.', '')}"
     download_url = f"{CIVITAI_DOWNLOAD}/{selected_version['id']}?token={CIVITAI_TOKEN}"
-    model_folder = get_model_folder(model_type)
+    model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
     model_path = os.path.join(model_folder, selected_version.get('base_model', ''), f"{selected_version.get('file')}")
     
 
@@ -476,14 +446,6 @@ def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[
 
     feedback_message(f"Version {selected_version_id} is not available for model {model_name}.", "error")
     return None
-
-
-def get_model_folder(model_type: str) -> str:
-    if model_type not in TYPES:
-        console.print(f"Model type '{model_type}' is not mapped to any folder. Please select a folder to download the model.")
-        selected_folder = typer.prompt("Enter the folder name to download the model:", default="unknown")
-        return os.path.join(MODELS_DIR, selected_folder)
-    return os.path.join(MODELS_DIR, TYPES[model_type])
 
 
 def download_file(url: str, path: str, desc: str) -> Optional[str]:
@@ -608,7 +570,7 @@ def list_models_cli():
         feedback_message("Invalid selection. Please enter a valid number.", "error")
         return
 
-    model_folder = get_model_folder(model_type)
+    model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
     models_in_folder = list_models(model_folder)
 
     if not models_in_folder:
@@ -626,38 +588,7 @@ def list_models_cli():
 
 
 @app.command("stats", help="Stats on the parent models directory.")
-def inspect_models_cli():
-    """Stats on the parent models directory."""
-    model_counts = count_models(MODELS_DIR)
-    
-    if not model_counts:
-        console.print("No models found.", style="yellow")
-        return
-
-    total_count = sum(model_counts.values())
-
-    table = Table(title_justify="left")
-    table.add_column("Model Type", style="cyan")
-    table.add_column(f"Model Per // Total Model Count: {total_count}", style="yellow")
-
-    for model_type, count in model_counts.items():
-        table.add_row(model_type, str(count))
-    
-    console.print(table)
-
-    # Get top 10 largest models
-    model_sizes = get_model_sizes(MODELS_DIR)
-
-    table = Table(title_justify="left")
-    table.add_column("Top 10 Largest Models // Model Name", style="cyan")
-    table.add_column("Size on Disk", style="yellow")
-
-    for model_name, size in sorted(model_sizes.items(), key=lambda x: float(x[1].split()[0]), reverse=True)[:10]:
-        table.add_row(model_name, size)
-
-    console.print(table)
-    feedback_message("""Warning: This is an overall count of files in a location and not based on model types. 
-                i.e. SDXL models and 1.5/2.1 will not be seperated in the count""", "warning")
+def stats_command(): return inspect_models_cli(MODELS_DIR)
 
 
 @app.command("details", help="Get detailed information about a specific model by ID.")
@@ -794,7 +725,7 @@ def remove_models_cli():
         console.print(table)
         return
 
-    model_folder = get_model_folder(model_type)
+    model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
     models_in_folder = list_models(model_folder)
 
     if not models_in_folder:

@@ -8,6 +8,9 @@ Civitai CLI Manager - Helpers
 This module contains helper functions for the Civitai Model Manager.
 
 """
+import os
+import typer
+
 from typing import Any, Dict, List, Optional, Tuple, Final
 from rich.console import Console
 from rich import print
@@ -45,3 +48,10 @@ def feedback_message(message: str, type: str = "info") -> None:
     console.print(feedback_message_table)
     return None
 
+
+def get_model_folder(models_dir: str, model_type: str, ref_types: dict) -> str:
+    if model_type not in ref_types:
+        console.print(f"Model type '{model_type}' is not mapped to any folder. Please select a folder to download the model.")
+        selected_folder = typer.prompt("Enter the folder name to download the model:", default="unknown")
+        return os.path.join(models_dir, selected_folder)
+    return os.path.join(models_dir, ref_types[model_type])
