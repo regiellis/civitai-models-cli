@@ -563,16 +563,16 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
     console.print(table)
     
     # Prompt for model it to get more details
-    model_id = typer.prompt("Enter the Model ID for details or type \"next\" to get more models; \"cancel\" to cancel", default="")
-    if model_id == "cancel":
-        return
+    #model_id = typer.prompt("Enter the Model ID for details or type \"next\" to get more models; \"cancel\" to cancel", default="")
+    # if model_id == "cancel":
+    #     return
     
-    if model_id == "next":
-        feedback_message(f"Paging not yet functional, pass --limit \\[n] to get more models", "warning")
-        return
-    else:
-        get_model_details_cli(model_id)
-        return
+    # if model_id == "next":
+    #     feedback_message(f"Paging not yet functional, pass --limit \\[n] to get more models", "warning")
+    #     return
+    # else:
+    #     get_model_details_cli(model_id)
+    #     return
 
 @app.command("explain", help="Get a summary of a specific model by ID using the specified service (default is Ollama).")
 def summarize_model_cli(identifier: str, service: str = "ollama"):
