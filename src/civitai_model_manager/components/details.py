@@ -17,6 +17,7 @@ import requests
 from typing import Any, Dict, List, Optional, Tuple, Final
 import typer
 import html2text
+import questionary
 
 from .helpers import feedback_message, create_table, add_rows_to_table
 from .utils import safe_get, safe_url, convert_kb
@@ -24,6 +25,16 @@ from rich.text import Text
 from rich.console import Console
 from rich import print
 from rich.table import Table
+
+__all__ = [
+    "get_model_details_cli",
+    "get_model_details",
+    "fetch_model_data",
+    "fetch_version_data",
+    "make_request",
+    "process_model_data",
+    "print_model_details",
+]
 
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
@@ -164,6 +175,16 @@ def print_model_details(model_details: Dict[str, Any], desc: bool, images: bool)
 
     if not versions and not model_details.get("parent_id"):
         feedback_message(f"No versions available for model {model_details['name']}.", "warning")
+        
+    # Ask user if they want to download the model using questionary
+    download_model = questionary.confirm("Would you like to download this model?").ask()
+    if download_model:
+        feedback_message(f"Downloading model {model_details['name']}...", "info")
+        # Download the model using the download URL
+        download_model(model_details["download_url"], model_details["name"], model_details["metadata"]["format"])
+    else:
+        feedback_message("Model download cancelled.", "warning")
+        
 
 
 def get_model_details_cli(identifier: str, desc: bool = False, images: bool = False, CIVITAI_MODELS: str = "", CIVITAI_VERSIONS: str = "") -> None:
@@ -180,3 +201,4 @@ def get_model_details_cli(identifier: str, desc: bool = False, images: bool = Fa
 
     except ValueError:
         feedback_message("Invalid model ID. Please enter a valid number.", "error")
+        

@@ -13,6 +13,13 @@ from rich.table import Table
 from .helpers import feedback_message, get_model_folder, create_table, add_rows_to_table
 import questionary
 
+__all__ = [
+    "list_models_cli",
+    "display_models_table",
+    "list_models",
+    "select_model_type",
+]
+
 console = Console(soft_wrap=True)
 
 
