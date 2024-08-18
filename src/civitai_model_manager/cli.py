@@ -80,6 +80,7 @@ from .components.tools import sanity_check_cli
 from .components.utils import convert_kb, clean_text, safe_get
 from .components.stats import inspect_models_cli
 from .components.details import get_model_details_cli, get_model_details
+from .components.list import list_models_cli, list_models
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -188,16 +189,6 @@ h2t = html2text.HTML2Text()
 app = typer.Typer()
 
 
-def list_models(model_dir: str) -> List[Tuple[str, str, str]]:
-    models = []
-    for root, _, files in os.walk(model_dir):
-        for file in files:
-            if file.endswith(FILE_TYPES):
-                model_path = os.path.join(root, file)
-                model_name = os.path.splitext(file)[0]
-                model_type = os.path.basename(root)
-                models.append((model_name, model_type, model_path))
-    return models
 
 
 # Search for models by query, tag, or types,  which are optional via the api
@@ -364,7 +355,7 @@ def remove_model(model_path: str) -> bool:
 # TODO: Fix the markdown output
 def summarize_model_description(model_id: int, service: str) -> Optional[str]:
     """Summarize the model description using the specified API service."""
-    model_details = get_model_details(model_id)
+    model_details = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, model_id)
     description = model_details.get("description", "No description available.")
 
     try:
@@ -415,39 +406,8 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
 def sanity_check_command(): return sanity_check_cli()
 
 
-@app.command("list")
-def list_models_cli():
-    """List available models along with their types and paths."""
-    model_types_list = list(TYPES.keys())
-
-    console.print("Available model types:")
-    for index, model_type in enumerate(model_types_list, start=1):
-        console.print(f"{index}. {model_type}")
-
-    model_type_index = typer.prompt("Enter the number corresponding to the type of model you would like to list")
-
-    try:
-        model_type = model_types_list[int(model_type_index) - 1]
-    except (IndexError, ValueError):
-        # TODO: restart the function if the user enters an invalid number
-        feedback_message("Invalid selection. Please enter a valid number.", "error")
-        return
-
-    model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
-    models_in_folder = list_models(model_folder)
-
-    if not models_in_folder:
-        console.print(f"No models found for type {model_type}.", style="bright_yellow")
-        return
-
-    table = Table(title=f"Models of Type: {model_type}", title_justify="left")
-    table.add_column("Model Name", style="cyan")
-    table.add_column("Path", style="bright_yellow")
-
-    for model in models_in_folder:
-        table.add_row(model[0], model[2])
-
-    console.print(table)
+@app.command("list", help="List available models along with their types and paths.")
+def list_models_command(): list_models_cli(TYPES, MODELS_DIR, FILE_TYPES)
 
 
 @app.command("stats", help="Stats on the parent models directory.")
@@ -464,7 +424,7 @@ def download_model_cli(identifier: str, select: bool = False):
     """Download a specific model variant by ID."""
     try:
         model_id = int(identifier)
-        model_details = get_model_details(model_id)
+        model_details = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, model_id)
 
         if model_details:
             model_path = download_model(model_id, model_details, select)
@@ -500,7 +460,7 @@ def remove_models_cli():
         return
 
     model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
-    models_in_folder = list_models(model_folder)
+    models_in_folder = list_models(model_folder, FILE_TYPES)
 
     if not models_in_folder:
         feedback_message(f"No models found for type {model_type}.", "warning")
@@ -578,7 +538,7 @@ def search_cli(query: str = "", tags=None, types="Checkpoint", limit=20, sort="H
 def summarize_model_cli(identifier: str, service: str = "ollama"):
     """Get a summary of a specific model by ID using the specified service (default is Ollama)."""
     try:
-        model = get_model_details(int(identifier))
+        model = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, int(identifier))
         model_id = model.get("id", "")
         model_name = model.get("name", "")
         summary = summarize_model_description(model_id, service)

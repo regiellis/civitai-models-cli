@@ -57,8 +57,14 @@ def fetch_version_data(versions_url: str, models_url: str, model_id: int) -> Opt
 def make_request(url: str) -> Optional[Dict]:
     try:
         response = requests.get(url)
-        response.raise_for_status()
+        if response.status_code == 404:
+            # TODO: Write a check for model versions that return 404 since civitai on gives 
+            # pages to parent models and not versions
+            pass
+        else:
+            response.raise_for_status()
         return response.json()
+
     except requests.RequestException as e:
         feedback_message(f"Failed to get data from {url}: {e}", "error")
         return None

@@ -1,11 +1,12 @@
 # Civitai CLI Manager
 
 > [!NOTE]
-Release 0.5.0 made the projecta  proper installable package and less of a stand-alone script. if you had a version before 0.5.0, it is recommended that you re-clone the repo and install the project
-with `pipx install .` or `pip install .`
+Release 0.5.0 made the project a proper installable package and less of a stand-alone script. if you had a version before 0.5.0, it is recommended that you re-clone the repo and install the project
+with `pipx install .` or `pip install .` To update the tool, you can run `pip install . --upgrade` or `pipx install . --upgrade` in the downloaded directory.
+If you install with `pipx`, you can run the tool with `civitai-cli-manager` or `civitai-cli-manager --help` to see the available commands. If you install with `pip`, you can run the tool with `civitai_model_manager` or `civitai_model_manager --help` to see the available commands.
 
 > [!WARNING]
-> This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future.
+> This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future as I move towards 1.0.0 release.
 
 ## Overview
 

@@ -34,17 +34,23 @@ def feedback_message(message: str, type: str = "info") -> None:
             "info": "green",
             "warning": "yellow",
             "error": "red",
+            "exception": "red",
         },
         "titles": {
             "info": "Information",
             "warning": "Warning",
             "error": "Error Message",
+            "exception": "Exception Message",
         }
     }
 
     feedback_message_table = Table(style=options["types"][type])
     feedback_message_table.add_column(options["titles"][type])
     feedback_message_table.add_row(message)
+    
+    if type == "exception":
+        console.print_exception(feedback_message_table)
+        raise typer.Exit()
     console.print(feedback_message_table)
     return None
 
