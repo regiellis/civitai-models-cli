@@ -133,6 +133,7 @@ This tool requires Python 3.11 or higher and has the following dependencies:
 - tqdm
 - civitai
 - python-dotenv
+- questionary
 - ollama
 - openai
 ```
