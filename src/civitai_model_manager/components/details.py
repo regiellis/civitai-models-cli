@@ -5,14 +5,15 @@
 Civitai CLI Manager - Details
 ==========================================================
 
-This module contains details functions for the Civitai Model Manager.
+This module contains details functions for the Civitai 
+Model Manager.
 
 """
 
 import os
 import sys
 import json
-import requests
+import httpx
 
 from typing import Any, Dict, List, Optional, Tuple, Final
 import typer
@@ -67,7 +68,7 @@ def fetch_version_data(versions_url: str, models_url: str, model_id: int) -> Opt
 
 def make_request(url: str) -> Optional[Dict]:
     try:
-        response = requests.get(url)
+        response = httpx.get(url)
         if response.status_code == 404:
             # TODO: Write a check for model versions that return 404 since civitai on gives 
             # pages to parent models and not versions

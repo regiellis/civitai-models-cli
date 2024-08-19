@@ -8,7 +8,7 @@ authors = [
     {name = "Regi E",email = "regi@bynine.io"}
 ]
 keywords = ["civitai", "model", "manager", "cli", "ai", "ml", "machine learning", "artificial intelligence"]
-version = "0.6.4"
+version = "0.6.5"
 description = "CLI tool for managing AI models from the CivitAI platform."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,11 +21,9 @@ classifiers = [
 dependencies = [
    "typer",
    "rich",
-   "requests",
+   "httpx",
    "shellingham",
    "html2text",
-   "tqdm",
-   "inquirer",
    "civitai",
    "python-dotenv",
    "questionary",

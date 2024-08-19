@@ -1,10 +1,8 @@
 typer
 rich
-requests
+httpx
 shellingham
 html2text
-tqdm
-inquirer
 civitai
 python-dotenv
 questionary

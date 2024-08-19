@@ -38,11 +38,9 @@ $ civitai-cli-manager --explain 12345 [--service ollama]
 # dependencies = [
 #   "typer",
 #   "rich",
-#   "requests",
+#   "httpx",
 #   "shellingham",
 #   "html2text",
-#   "tqdm",
-#   "inquirer",
 #   "civitai",
 #   "python-dotenv",
 #   "ollama",
@@ -60,20 +58,25 @@ from typing import Any, Dict, List, Optional, Tuple, Final
 import requests
 import typer
 import html2text
-import inquirer
+import httpx
 
 from platform import system
 from collections import defaultdict
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
-from tqdm import tqdm
 from rich.console import Console
 from rich import print
 from rich.table import Table
 from rich.text import Text
 from rich.markdown import Markdown
+from rich.spinner import Spinner
+from rich.progress import Progress
 from rich.traceback import install
 install()
+
+from civitai_model_manager.config import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
+                                          CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
+                                          OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
 
 from .components.helpers import feedback_message, get_model_folder
 from .components.tools import sanity_check_cli
@@ -116,68 +119,6 @@ def load_environment_variables(console: Console = Console()) -> None:
     feedback_message(".env file is missing. Please create one using the sample.env provided.", "warning")
 
 load_environment_variables(Console())
-MODELS_DIR: Final = os.getenv("MODELS_DIR", "")
-CIVITAI_TOKEN: Final = os.getenv("CIVITAI_TOKEN", "")
-
-CIVITAI_MODELS: Final = "https://civitai.com/api/v1/models"
-CIVITAI_IMAGES: Final = "https://civitai.com/api/v1/images"
-CIVITAI_VERSIONS: Final = "https://civitai.com/api/v1/model-versions"
-CIVITAI_DOWNLOAD: Final = "https://civitai.com/api/download/models"
-
-TYPES: Final = {
-    "Checkpoint": "checkpoints",
-    "TextualInversion": "embeddings",
-    "Hypernetwork": "hypernetworks",
-    "AestheticGradient": "aesthetic_embeddings",
-    "LORA": "loras",
-    "LoCon": "models/Lora",
-    "Controlnet": "controlnet",
-    "Poses": "poses",
-    "Upscaler": "esrgan",
-    "MotionModule": "motion_module",
-    "VAE": "VAE",
-    "Wildcards": "wildcards",
-    "Workflows": "workflows",
-    "Other": "other"
-}
-
-FILE_TYPES = (".safetensors", ".pt", ".pth", ".ckpt")
-MODEL_TYPES: Final = ["SDXL 1.0", "SDXL 0.9", "SD 1.5", "SD 1.4", "SD 2.0", "SD 2.0 768", "SD 2.1", "SD 2.1 768", "Other"]
-
-OLLAMA_OPTIONS: Final = {
-    "model": os.getenv("OLLAMA_MODEL", ""),
-    "api_base": os.getenv("OLLAMA_API_BASE", ""),
-    "temperature": os.getenv("TEMP", 0.9),
-    "top_p": os.getenv("TOP_P", 0.3),
-    "html_output": os.getenv("HTML_OUT", False),
-    "system_template": (
-        "You are an expert in giving detailed explanations of description you are provided. Do not present it "
-        "like an update log. Make sure to explains the full description in a clear and concise manner. "
-        "The description is provided by the CivitAI API and not written by the user, so don't make recommendations "
-        "on how to improve the description, just be detailed, clear and thorough about the provided content. "
-        "Include information on recommended settings and tip if they appear in the description:\n "
-        "- Tips on Usage\n"
-        "- Sampling method\n"
-        "- Schedule type\n"
-        "- Sampling steps\n"
-        "- CFG Scale\n"
-        "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!"
-        "Return the description in Markdown format.\n\n"
-        "You will find the description below: \n\n"
-    )
-}
-
-OPENAI_OPTIONS = {
-    "api_key": os.getenv("OPENAI_API_KEY", ""),
-    "model": os.getenv("OPENAI_MODEL", ""),
-    "system_template": OLLAMA_OPTIONS["system_template"]
-}
-
-GROQ_OPTIONS = {
-    "api_key": os.getenv("GROQ_API_KEY", ""),
-    "model": os.getenv("GROQ_MODEL", ""),
-    "system_template": OLLAMA_OPTIONS["system_template"]
-}
 
 
 Ollama = OllamaClient(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None
@@ -188,8 +129,6 @@ Groq = GroqClient(api_key=GROQ_OPTIONS["api_key"]) if GROQ_OPTIONS["api_key"] el
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
 app = typer.Typer()
-
-
 
 
 # Search for models by query, tag, or types,  which are optional via the api
@@ -242,17 +181,18 @@ def remove_model(model_path: str) -> bool:
         confirmation = typer.confirm(f"Are you sure you want to remove the model at {model_path}? (Y/N): ", abort=True)
         if confirmation:
             console.print(f"Removing model at {model_path}...", style="bright_yellow")
-            total_size = os.path.getsize(model_path)  
-            with tqdm(total=total_size, unit='B', unit_scale=True, desc="Removing Model", colour="magenta") as progress_bar:
-                # Attempt to delete the model
+            total_size = os.path.getsize(model_path)
+            with Console.status(f"[pulse] Removing {model_path}") as status:
                 try:
                     os.remove(model_path)
-                    progress_bar.update(total_size)
+                    status.update(f"[green]Model removed successfully. Freed up {convert_kb(total_size)}",
+                                  spinner="aesthetic",
+                                  spinner_style="bright_yellow")
+                    feedback_message(f"Model at {model_path} removed successfully.", "info")
                     return True
                 except OSError as e:
                     feedback_message(f"Failed to remove the model at {model_path} // {e}.", "error")
                     return False
-                feedback_message(f"Model at {model_path} removed successfully.", "info")
         else:
             return False
         
@@ -309,28 +249,6 @@ def summarize_model_description(model_id: int, service: str) -> Optional[str]:
     except Exception as e:
         feedback_message(f"Failed to summarize the model description using {service} // {e}", "error")
         return None
-
-
-@app.command("sanity-check", help="Check to see if the app is ready to run.")
-def sanity_check_command(): return sanity_check_cli()
-
-
-@app.command("list", help="List available models along with their types and paths.")
-def list_models_command(): list_models_cli(TYPES, MODELS_DIR, FILE_TYPES)
-
-
-@app.command("stats", help="Stats on the parent models directory.")
-def stats_command(): return inspect_models_cli(MODELS_DIR)
-
-
-@app.command("details", help="Get detailed information about a specific model by ID.")
-def details_command(identifier: str, desc: bool = False, images: bool = False):
-    get_model_details_cli(identifier, desc, images,  CIVITAI_MODELS, CIVITAI_VERSIONS)
-
-
-@app.command("download", help="Download a specific model variant by ID.")
-def download_model_command(identifier: str, select: bool = False):
-    download_model_cli(MODELS_DIR, CIVITAI_MODELS, CIVITAI_VERSIONS, CIVITAI_TOKEN, TYPES, identifier, select)
 
 
 @app.command("remove", help="Remove specified models from local storage.")
@@ -444,6 +362,28 @@ def summarize_model_cli(identifier: str, service: str = "ollama"):
         console.print(summary_table)
     except ValueError:
         feedback_message("Invalid model ID. Please enter a valid number.", "error")
+        
+        
+@app.command("sanity-check", help="Check to see if the app is ready to run.")
+def sanity_check_command(): return sanity_check_cli()
+
+
+@app.command("list", help="List available models along with their types and paths.")
+def list_models_command(): list_models_cli(TYPES, MODELS_DIR, FILE_TYPES)
+
+
+@app.command("stats", help="Stats on the parent models directory.")
+def stats_command(): return inspect_models_cli(MODELS_DIR)
+
+
+@app.command("details", help="Get detailed information about a specific model by ID.")
+def details_command(identifier: str, desc: bool = False, images: bool = False):
+    get_model_details_cli(identifier, desc, images,  CIVITAI_MODELS, CIVITAI_VERSIONS)
+
+
+@app.command("download", help="Download a specific model variant by ID.")
+def download_model_command(identifier: str, select: bool = False):
+    download_model_cli(MODELS_DIR, CIVITAI_MODELS, CIVITAI_VERSIONS, CIVITAI_TOKEN, TYPES, identifier, select)
 
 
 def main():
