@@ -14,7 +14,7 @@
 # ]
 # ///
 
-from ccm.config import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
+from ccm import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
                         CIVITAI_DOWNLOAD, CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
                         OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
 from .modules.helpers import feedback_message
@@ -89,7 +89,9 @@ def explain_model_command(identifier: str, service: str = "ollama"): explain_mod
                                                                                        OPENAI_OPTIONS=OPENAI_OPTIONS, GROQ_OPTIONS=GROQ_OPTIONS)
 
 @civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")
-def sanity_check_command(): return sanity_check_cli()
+def sanity_check_command(): return sanity_check_cli(CIVITAI_MODELS=CIVITAI_MODELS, 
+                                                    CIVITAI_VERSIONS=CIVITAI_VERSIONS, OLLAMA_OPTIONS=OLLAMA_OPTIONS, 
+                                                    OPENAI_OPTIONS=OPENAI_OPTIONS, GROQ_OPTIONS=GROQ_OPTIONS)
 
 @civitai_cli.command("list", help="List available models along with their types and paths.")
 def list_models_command(): list_models_cli()
