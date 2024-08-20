@@ -16,19 +16,6 @@ __all__ = ["get_model_details_cli"]
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
 
-
-def get_model_details(CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, model_id: int) -> Dict[str, Any]:
-    if not model_id:
-        feedback_message("Please provide a valid model ID.", "error")
-        return {}
-
-    model_data = fetch_model_data(CIVITAI_MODELS, model_id)
-    if not model_data:
-        model_data = fetch_version_data(CIVITAI_VERSIONS, CIVITAI_MODELS, model_id)
-
-    return process_model_data(model_data) if model_data else {}
-
-
 def fetch_model_data(url: str, model_id: int) -> Optional[Dict]:
     return make_request(f"{url}/{model_id}")
 
@@ -56,6 +43,17 @@ def make_request(url: str) -> Optional[Dict]:
     except httpx.RequestError as e:
         feedback_message(f"Failed to get data from {url}: {e}", "error")
         return None
+
+def get_model_details(CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, model_id: int) -> Dict[str, Any]:
+    if not model_id:
+        feedback_message("Please provide a valid model ID.", "error")
+        return {}
+
+    model_data = fetch_model_data(CIVITAI_MODELS, model_id)
+    if not model_data:
+        model_data = fetch_version_data(CIVITAI_VERSIONS, CIVITAI_MODELS, model_id)
+
+    return process_model_data(model_data) if model_data else {}
 
 
 def process_model_data(data: Dict) -> Dict[str, Any]:

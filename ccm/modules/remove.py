@@ -4,7 +4,6 @@ import questionary
 from questionary import Style
 from typing import List, Tuple
 
-
 from rich.console import Console
 from .helpers import feedback_message, get_model_folder, create_table
 from .utils import format_file_size
