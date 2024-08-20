@@ -6,7 +6,7 @@ import html2text
 import questionary
 
 from .helpers import feedback_message, create_table, add_rows_to_table
-from .utils import safe_get, safe_url, convert_kb
+from .utils import safe_get, safe_url, format_file_size
 from rich.text import Text
 from rich.console import Console
 
@@ -95,7 +95,7 @@ def get_metadata(data: Dict, is_version: bool) -> Dict[str, Any]:
         "stats": f"{safe_get(data, stats_path + ['downloadCount'], '')} downloads, "
                 f"{safe_get(data, stats_path + ['thumbsUpCount'], '')} likes, "
                 f"{safe_get(data, stats_path + ['thumbsDownCount'], '')} dislikes",
-        "size": convert_kb(safe_get(data, files_path + ["sizeKB"], "")),
+        "size": format_file_size(safe_get(data, files_path + ["sizeKB"], "")),
         "format": safe_get(data, files_path + ["metadata", "format"], ".safetensors"),
         "file": safe_get(data, files_path + ["name"], ""),
     }

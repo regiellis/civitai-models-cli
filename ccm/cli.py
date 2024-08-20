@@ -95,11 +95,11 @@ def sanity_check_command(): return sanity_check_cli()
 def list_models_command(): list_models_cli()
 
 @civitai_cli.command("stats", help="Stats on the parent models directory.")
-def stats_command(): return inspect_models_cli(MODELS_DIR)
+def stats_command(): return inspect_models_cli(MODELS_DIR=MODELS_DIR)
 
 @civitai_cli.command("details", help="Get detailed information about a specific model by ID.")
 def details_command(identifier: str, desc: bool = False, images: bool = False):
-    get_model_details_cli(identifier, desc, images,  CIVITAI_MODELS, CIVITAI_VERSIONS)
+    get_model_details_cli(identifier, desc, images,  CIVITAI_MODELS=CIVITAI_MODELS, CIVITAI_VERSIONS=CIVITAI_VERSIONS)
 
 @civitai_cli.command("download", help="Download a specific model variant by ID.")
 def download_model_command(identifier: str, select: bool = False):
@@ -107,7 +107,7 @@ def download_model_command(identifier: str, select: bool = False):
                        CIVITAI_VERSIONS=CIVITAI_VERSIONS, CIVITAI_TOKEN=CIVITAI_TOKEN, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 @civitai_cli.command("remove", help="Remove specified models from local storage.")
-def remove_models_command(): remove_models_cli()
+def remove_models_command(): remove_models_cli(MODELS_DIR=MODELS_DIR, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 @civitai_cli.command("version", help="Current version of the CLI.")
 def version_command(): feedback_message(f"Current version: {__version__}", "info")

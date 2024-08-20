@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict, Optional
 from rich.console import Console
 from .helpers import (feedback_message, get_model_folder, 
                       create_table, add_rows_to_table)
-from .utils import convert_kb, sort_models
+from .utils import format_file_size, sort_models
 from ccm.config import (MODELS_DIR, FILE_TYPES, TYPES)
 
 __all__ = [
@@ -27,7 +27,7 @@ def list_models(model_dir: str, file_types: List[str]) -> List[Tuple[str, str, s
                 model_path = os.path.join(root, file)
                 model_name = os.path.splitext(file)[0]
                 model_type = os.path.basename(root)
-                model_size = convert_kb(os.path.getsize(model_path))
+                model_size = format_file_size(os.path.getsize(model_path))
                 models.append((model_name, model_type, model_path, model_size))
     return sort_models(models)
 

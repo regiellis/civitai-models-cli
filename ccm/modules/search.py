@@ -1,15 +1,10 @@
 import httpx
-from typing import Any, Dict, List, Optional, Tuple, Final
+from typing import Any, Dict, List
 from rich.console import Console
-from rich import print
 from rich.text import Text
 
-from ccm.config import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
-                                          CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
-                                          OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
-
 from rich.table import Table
-from .utils import convert_kb, clean_text
+from .utils import clean_text
 
 console = Console(soft_wrap=True)
 
