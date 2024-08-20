@@ -1,9 +1,8 @@
 from typer.testing import CliRunner
 
-from civitai_model_manager.cli import app
+from ccm.cli import app
 
 runner = CliRunner()
-
 
 
 def test_app():

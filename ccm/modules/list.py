@@ -1,22 +1,11 @@
-"""
-==========================================================
-Civitai CLI Manager - List
-==========================================================
-
-This module contains list functions for the Civitai Model Manager.
-"""
-
 import os
-import typer
 import questionary
 
 from typing import List, Tuple, Dict, Optional
 from rich.console import Console
-
 from .helpers import (feedback_message, get_model_folder, 
                       create_table, add_rows_to_table)
 from .utils import convert_kb, sort_models
-
 from ccm.config import (MODELS_DIR, FILE_TYPES, TYPES)
 
 __all__ = [

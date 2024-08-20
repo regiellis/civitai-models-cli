@@ -1,21 +1,8 @@
-# -*- coding: utf-8 -*-
-
-"""
-==========================================================
-Civitai CLI Manager - Stats
-==========================================================
-
-This module contains functions for generating statistics for the Civitai Model Manager.
-
-"""
-
 import os
-import json
-from typing import Any, Dict, List, Optional, Tuple, Final
+from typing import Dict, Optional
+from collections import OrderedDict
 from rich.console import Console
-from rich.table import Table
-
-from .helpers import feedback_message, create_table, add_rows_to_table
+from .helpers import feedback_message, create_table
 from .utils import format_file_size
 
 __all__ = ["inspect_models_cli",]
@@ -68,20 +55,22 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
 
     if not model_counts:
         feedback_message("No models found.", "warning")
-        return table
+        return
 
     total_count = sum(model_counts.values())
-    
+
     inspect_table= create_table(
         "",
         [("Model Type", "bright_yellow bold"),
-         ("Model Per Directory ", "bright_yellow"),
-         ("Model Type Paths", "bright_yellow"),
+         ("Models Per Type ", "bright_yellow"),
+         ("Model Per Directory", "bright_yellow"),
          ("Model Path", "bright_yellow"),
          (f"Model Breakdown // Total Model Count: {total_count}", "bright_yellow")]
     )
-    
-    for model_type, count in model_counts.items():
+
+    model_stats = OrderedDict(model_counts)
+
+    for model_type, count in sorted(model_stats.items()):
         base_path = os.path.join(MODELS_DIR, model_type)
         path_types = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))]
 
@@ -116,13 +105,11 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
     # Get top 10 largest models
     model_sizes = get_model_sizes(MODELS_DIR)
 
-    table = Table(title_justify="left")
-    
     largest_table = create_table("", [
         ("Top 10 Largest Models // Model Name", "bright_yellow"),
         ("Size on Disk", "bright_yellow bold"),
         ("Model Path", "white")])
-    
+
     for model_name, size in sorted(model_sizes.items(), key=lambda x: float(x[1].split()[0]), reverse=True)[:10]:
         largest_table.add_row(model_name, size, find_model_by_name(MODELS_DIR, model_name))
 
