@@ -1,5 +1,6 @@
 import os
 import questionary
+from questionary import Style
 
 from typing import List, Tuple, Dict, Optional
 from rich.console import Console
@@ -16,6 +17,19 @@ __all__ = [
 ]
 
 console = Console(soft_wrap=True)
+
+custom_style = Style([
+    ('qmark', 'fg:#ffff00 bold'),        # Yellow question mark
+    ('question', 'fg:#ffffff bold'),     # White bold question text
+    ('answer', 'fg:#ffff00 bold'),       # Yellow bold answer text
+    ('pointer', 'fg:#ffff00 bold'),      # Yellow bold pointer
+    ('highlighted', 'fg:#000000 bg:#00FFFF bold'),  # black text on cyan background for highlighted items
+    ('selected', 'fg:#ffff00'),          # Yellow for selected items
+    ('separator', 'fg:#ffff00'),         # Yellow separator
+    ('instruction', 'fg:#ffffff'),       # White instruction text
+    ('text', 'fg:#ffffff'),              # White general text
+    ('disabled', 'fg:#ffff00 italic')    # Yellow italic for disabled items
+])
 
 
 def list_models(model_dir: str, file_types: List[str]) -> List[Tuple[str, str, str]]:
@@ -52,7 +66,7 @@ def select_model_type(types: Dict[str, str]) -> Optional[str]:
     selected = questionary.select(
         "Select the type of model you would like to list (or 'Exit' to quit):",
         choices=choices,
-        qmark="🤖",
+        style=custom_style
     ).ask()
     return selected if selected != "Exit" else None
 
