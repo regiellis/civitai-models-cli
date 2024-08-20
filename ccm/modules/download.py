@@ -1,21 +1,14 @@
-"""
-==========================================================
-Civitai CLI Manager - Download
-==========================================================
-
-This module contains download functions for the Civitai Model Manager.
-"""
-
 import os
 import requests
 import typer
-from typing import Any, List, Tuple, Dict, Optional
+from typing import Any, List, Dict, Optional
 from tqdm import tqdm
 from rich.console import Console
-from rich.table import Table
-from .helpers import feedback_message, get_model_folder, create_table, add_rows_to_table
+from .helpers import feedback_message, get_model_folder, create_table
 from .details import get_model_details
-import questionary
+
+__all__ = ["download_model_cli"]
+
 
 console = Console(soft_wrap=True)
 
@@ -23,15 +16,19 @@ console = Console(soft_wrap=True)
 def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     feedback_message(f"Please select a version to download for model {model_name}.", "info")
     
-    table = Table(title="Available Versions", title_justify="left")
-    table.add_column("Version ID", style="bright_yellow")
-    table.add_column("Version Name", style="cyan")
-    table.add_column("Base Model", style="blue")
+    versions_table = create_table(
+        "Available Versions",
+        [
+            ("Version ID", "bright_yellow"),
+            ("Version Name", "cyan"),
+            ("Base Model", "blue")
+        ]
+    )
 
     for version in versions:
-        table.add_row(str(version["id"]), version["name"], version["base_model"])
+        versions_table.add_row(str(version["id"]), version["name"], version["base_model"])
     
-    console.print(table)
+    console.print(versions_table)
     selected_version_id = typer.prompt("Enter the version ID to download:")
 
     for version in versions:
@@ -47,7 +44,7 @@ def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str,
     model_type = model_details.get("type", "unknown")
     model_meta = model_details.get("metadata", {})
     versions = model_details.get("versions", [])
-
+    
     if versions == [] and not model_details.get("parent_id"):
         feedback_message(f"No versions available for model {model_name}.", "warning")
         return None
@@ -55,7 +52,6 @@ def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str,
     if not select and not model_details.get("parent_id"):
         selected_version = versions[0]
     elif not select and model_details.get("parent_id"):
-        # TODO: Do a better job of handling this case
         # Assume the model is a variant
         selected_version = {
             "id": model_id,
@@ -108,17 +104,16 @@ def download_file(url: str, path: str, desc: str) -> Optional[str]:
         feedback_message(f"Failed to download the file: {e} // Please check if you have permission to download files to the specified path.", "error")
         return None
     
-    
-def download_model_cli(MODELS_DIR: str, CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, CIVITAI_DOWNLOAD: str,
-                       CIVITAI_TOKEN: str, TYPES: list[str], identifier: str, select: bool = False):
-    """Download a specific model variant by ID."""
+# TODO: Look into dealing with partial downloads and resuming downloads
+def download_model_cli(identifier: str, select: bool = False, **kwargs) -> None:
     try:
         model_id = int(identifier)
-        model_details = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, model_id)
-        types = TYPES
+        model_details = get_model_details(kwargs.get("CIVITAI_MODELS"), kwargs.get("CIVITAI_VERSIONS"), model_id)
+        types = kwargs.get("TYPES")
 
         if model_details:
-            model_path = download_model(MODELS_DIR, CIVITAI_DOWNLOAD, CIVITAI_TOKEN, types, model_id, model_details, select)
+            model_path = download_model(kwargs.get("MODELS_DIR"), kwargs.get("CIVITAI_DOWNLOAD"), kwargs.get("CIVITAI_TOKEN"), 
+                                        types, model_id, model_details, select)
             if model_path:
                 feedback_message(f"Model downloaded successfully at: {model_path}", "info")
             else:

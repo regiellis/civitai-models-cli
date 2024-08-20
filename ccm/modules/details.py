@@ -1,20 +1,7 @@
-# -*- coding: utf-8 -*-
-
-"""
-Civitai CLI Manager - Details
-
-This module contains details functions for the Civitai 
-Model Manager.
-
-"""
-
-import os
-import sys
-import json
 import httpx
+import subprocess
 
-from typing import Any, Dict, List, Optional, Tuple, Final
-import typer
+from typing import Any, Dict, Optional
 import html2text
 import questionary
 
@@ -22,8 +9,7 @@ from .helpers import feedback_message, create_table, add_rows_to_table
 from .utils import safe_get, safe_url, convert_kb
 from rich.text import Text
 from rich.console import Console
-from rich import print
-from rich.table import Table
+
 
 __all__ = ["get_model_details_cli"]
 
@@ -67,7 +53,7 @@ def make_request(url: str) -> Optional[Dict]:
             response.raise_for_status()
         return response.json()
     
-    except httpx.RequestException as e:
+    except httpx.RequestError as e:
         feedback_message(f"Failed to get data from {url}: {e}", "error")
         return None
 
@@ -155,7 +141,16 @@ def print_model_details(model_details: Dict[str, Any], desc: bool, images: bool)
     if images and model_details.get("images"):
         images_table = create_table("", [("NSFW Lvl", "bright_red"), ("URL", "bright_yellow")])
         for image in model_details["images"]:
-            images_table.add_row(str(image.get("nsfwLevel")), safe_url(image.get("url")))
+            nsfw_level = image.get("nsfwLevel", 0)
+            if nsfw_level > 10:
+                images_table.add_row(Text(f"{nsfw_level} // NSFW", style="bright_red"), safe_url(image["url"]))
+            elif nsfw_level > 5:
+                images_table.add_row(Text(f"{nsfw_level} // SUGGESTIVE", style="bright_yellow"), safe_url(image["url"]))
+            else:
+                images_table.add_row(Text(f"{nsfw_level} // SAFE", style="bright_green"), safe_url(image["url"]))
+
+
+        feedback_message("NSFW Ratings are provided by the API, not by the this CLI Tool", "info")
         console.print(images_table)
 
     if model_details.get("parent_id"):
@@ -168,11 +163,13 @@ def print_model_details(model_details: Dict[str, Any], desc: bool, images: bool)
         feedback_message(f"No versions available for model {model_details['name']}.", "warning")
 
     # Ask user if they want to download the model using questionary
-    download_model = questionary.confirm("Would you like to download this model?").ask()
-    if download_model:
-        feedback_message(f"Downloading model {model_details['name']}...", "info")
-        # Download the model using the download URL
-        download_model(model_details["download_url"], model_details["name"], model_details["metadata"]["format"])
+    #download_model = questionary.confirm("Would you like to download this model?").ask()
+    download_model_question = questionary.select("Would you like to download this model or a version",
+                                                 choices=["Model", "Version", "Cancel"]).ask()
+    if download_model_question == "Model":
+        subprocess.run(f"civitai-models download {model_details['id']}", shell=True)
+    elif download_model_question == "Version":
+        subprocess.run(f"civitai-models download {model_details['id']} --select", shell=True)
     else:
         feedback_message("Model download cancelled.", "warning")
 

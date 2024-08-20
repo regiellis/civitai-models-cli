@@ -14,7 +14,9 @@
 # ]
 # ///
 
-from ccm import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, CIVITAI_VERSIONS, TYPES)
+from ccm.config import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
+                        CIVITAI_DOWNLOAD, CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
+                        OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
 from .modules.helpers import feedback_message
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
@@ -28,9 +30,6 @@ import typer
 
 from rich.traceback import install
 install()
-
-from ccm import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, CIVITAI_VERSIONS, TYPES)
-
 
 """
 ====================================================================
@@ -85,7 +84,9 @@ def search_models_command(query: str = "", tags: str = None, types: str = "Check
     search_cli(query, tags, types, limit, sort, period)
 
 @civitai_cli.command("explain", help="Get a summary of a specific model by ID using the specified service (default is Ollama).")
-def explain_model_command(identifier: str, service: str = "ollama"): explain_model_cli(identifier, service)
+def explain_model_command(identifier: str, service: str = "ollama"): explain_model_cli(identifier, service, CIVITAI_MODELS=CIVITAI_MODELS, 
+                                                                                       CIVITAI_VERSIONS=CIVITAI_VERSIONS, OLLAMA_OPTIONS=OLLAMA_OPTIONS, 
+                                                                                       OPENAI_OPTIONS=OPENAI_OPTIONS, GROQ_OPTIONS=GROQ_OPTIONS)
 
 @civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")
 def sanity_check_command(): return sanity_check_cli()
@@ -102,7 +103,8 @@ def details_command(identifier: str, desc: bool = False, images: bool = False):
 
 @civitai_cli.command("download", help="Download a specific model variant by ID.")
 def download_model_command(identifier: str, select: bool = False):
-    download_model_cli(MODELS_DIR, CIVITAI_MODELS, CIVITAI_VERSIONS, CIVITAI_TOKEN, TYPES, identifier, select)
+    download_model_cli(identifier, select, MODELS_DIR=MODELS_DIR, CIVITAI_MODELS=CIVITAI_MODELS, CIVITAI_DOWNLOAD=CIVITAI_DOWNLOAD,
+                       CIVITAI_VERSIONS=CIVITAI_VERSIONS, CIVITAI_TOKEN=CIVITAI_TOKEN, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 @civitai_cli.command("remove", help="Remove specified models from local storage.")
 def remove_models_command(): remove_models_cli()
