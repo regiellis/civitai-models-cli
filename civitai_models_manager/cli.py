@@ -6,7 +6,6 @@
 #   "httpx",
 #   "shellingham",
 #   "html2text",
-#   "civitai",
 #   "python-dotenv",
 #   "ollama",
 #   "openai",

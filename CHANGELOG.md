@@ -1,6 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.7.5] - 2024-08-15
+- **Hotfix**: Removed unused imports and cleaned up the code for better maintainability and readability.
+
+## [0.7.4] - 2024-08-15
+- **Windows Fixes**: Odds and Ends to get everything working on windows.
 
 ## [0.7.3] - 2024-08-15
 - **PyPI Naming Fix**: Fixed naming of internal package so that tool can be uploaded to PyPI.

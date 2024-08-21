@@ -3,7 +3,6 @@ rich
 httpx
 shellingham
 html2text
-civitai
 python-dotenv
 questionary
 ollama
