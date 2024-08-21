@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.7.1] - 2024-08-15
+## [0.7.3] - 2024-08-15
+- **PyPI Naming Fix**: Fixed naming of internal package so that tool can be uploaded to PyPI.
+
+## [0.7.2] - 2024-08-15
 - **Version Bump**: v0.7.1 to v0.7.2
 
 ## [0.7.1] - 2024-08-15
