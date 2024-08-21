@@ -44,7 +44,7 @@ def check_api_availability() -> Dict[str, Any]:
             return {"status": True, "message": "API is accessible"}
         else:
             return {"status": False, "message": f"API returned status code {response.status_code}"}
-    except httpx.RequestException as e:
+    except httpx.RequestError as e:
         return {"status": False, "message": f"Failed to connect to API: {str(e)}"}
 
 
