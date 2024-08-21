@@ -43,20 +43,20 @@ local storage. It also provides a summary of the model description using
 Ollama or OpenAI.
 
 Usage:
-$ pipx install civitai-model-manager or pip install civitai-model-manager
-$ pip install . or pipx install . # To install the package locally
+$ pipx install civitai-models or pip install civitai-models [not on pip yet]
+$ pip install . or pipx install . # To install the package locally (recommended)
 $ civitai-model-manager [OPTIONS] [COMMAND] [ARGS]
 
 Options:
-  details INT                   Get detailed information about a specific model by ID.
-  download INT                  Download a specific model variant by ID.
-  explain INT                   Get a summary of a specific model by ID.
-  list                          List available models along with their types and paths.
-  stats                         Stats on the parent models directory.
-  sanity-check                  Check to see if the app is ready to run.
-  search TEXT --query           Search for models by query, tag, or types, which are optional via the API.
-  remove                        Remove specified models from local storage.
-  --help                        Show this message and exit.
+    details INT                   Get detailed information about a specific model by ID.
+    download INT                  Download a specific model variant by ID.
+    explain INT                   Get a summary of a specific model by ID.
+    list                          List available models along with their types and paths.
+    stats                         Stats on the parent models directory.
+    sanity-check                  Check to see if the app is ready to run.
+    search TEXT --query           Search for models by query, tag, or types, which are optional via the API.
+    remove                        Remove specified models from local storage.
+    --help                        Show this message and exit.
 
 Examples:
 
@@ -66,7 +66,7 @@ $ civitai-models details 12345 [desc] [images]
 $ civitai-models download 54321 [--select]
 $ civitai-models remove
 $ civitai-models explain 12345 [--service ollama]
-$ civitai-models search "text" [--tags "tag1, tag2"] [--types "Checkpoint"] [--limit 20] [--sort "Highest Rated"] [--period "AllTime"]
+$ civitai-models search "text" [--tag "tag1"] [--types "Checkpoint"] [--limit 20] [--sort "Highest Rated"] [--period "AllTime"]
 $ civitai-models sanity-check
 $ civitai-models help
 $ civitai-models version
@@ -79,9 +79,9 @@ __all__ = ["civitai_cli"]
 civitai_cli = typer.Typer()
 
 @civitai_cli.command("search", help="Search for models by query, tag, or types, which are optional via the API.")
-def search_models_command(query: str = "", tags: str = None, types: str = "Checkpoint", limit: int = 20, 
+def search_models_command(query: str = "", tag: str = None, types: str = "Checkpoint", limit: int = 20,
                           sort: str = "Highest Rated", period: str = "AllTime"):
-    search_cli(query, tags, types, limit, sort, period)
+    search_cli(query, tag, types, limit, sort, period, CIVITAI_MODELS=CIVITAI_MODELS, TYPES=TYPES)
 
 @civitai_cli.command("explain", help="Get a summary of a specific model by ID using the specified service (default is Ollama).")
 def explain_model_command(identifier: str, service: str = "ollama"): explain_model_cli(identifier, service, CIVITAI_MODELS=CIVITAI_MODELS, 
@@ -89,8 +89,8 @@ def explain_model_command(identifier: str, service: str = "ollama"): explain_mod
                                                                                        OPENAI_OPTIONS=OPENAI_OPTIONS, GROQ_OPTIONS=GROQ_OPTIONS)
 
 @civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")
-def sanity_check_command(): return sanity_check_cli(CIVITAI_MODELS=CIVITAI_MODELS, 
-                                                    CIVITAI_VERSIONS=CIVITAI_VERSIONS, OLLAMA_OPTIONS=OLLAMA_OPTIONS, 
+def sanity_check_command(): return sanity_check_cli(CIVITAI_MODELS=CIVITAI_MODELS,
+                                                    CIVITAI_VERSIONS=CIVITAI_VERSIONS, OLLAMA_OPTIONS=OLLAMA_OPTIONS,
                                                     OPENAI_OPTIONS=OPENAI_OPTIONS, GROQ_OPTIONS=GROQ_OPTIONS)
 
 @civitai_cli.command("list", help="List available models along with their types and paths.")
