@@ -1,9 +1,9 @@
 # Civitai CLI Manager
 
 > [!NOTE]
-Release 0.5.0 made the project a proper installable package and less of a stand-alone script. if you had a version before 0.5.0, it is recommended that you re-clone the repo and install the project
-with `pipx install .` or `pip install .` To update the tool, you can run `pip install . --upgrade` or `pipx install . --upgrade` in the downloaded directory.
-If you install with `pipx`, you can run the tool with `civitai-cli-manager` or `civitai-cli-manager --help` to see the available commands. If you install with `pip`, you can run the tool with `civitai_model_manager` or `civitai_model_manager --help` to see the available commands.
+Release 0.7.0 was another big refactor for the project. if you had a version before 0.7.0, it is recommended that you re-clone the repo and install the project
+with `pipx install .` or `pip install .` SInce the naming has changed, you will need to do a `pipx uninstall civitai-cli-manager` or `pip uninstall civitai-cli-manager` 
+to remove the old version. You can not run the tool using the new name `civitai-models` or `civitai-models --help` to see the new commands.
 
 > [!WARNING]
 > This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future as I move towards 1.0.0 release.
@@ -19,7 +19,7 @@ I initially intended for this to be just a module in a larger **Comfy CLI** tool
 
 ## Why
 
-I needed a more efficient way to download, organize and manage my AI models from the site and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary 
+I needed a more efficient way to download, organize and manage my AI models from the site and the result is this CLI tool that allows me (and you) to store and manage models in a centralized directory. The tool also allows for a quick model summary
 via the Ollama(OpenAI), OpenAI or Groq if you choose. It is a great way to get a quick overview of a model's capabilities without having to download it first or read a lengthy description that may not be in your native language.
 
 ## Key Features
@@ -63,13 +63,12 @@ You will need to have the `pytest` package installed to run the tests.
 Also, testing is not yet complete, so expect some failures...cause I have a 1 year old so time is limited. I will get to it...eventually. I know python....tests are important.
 
 ```bash
-python test_civitai_model_manager.py
-```
+`pytest` in the root directory of the project.```
 
 ## Configuration
 
 > [!IMPORTANT]
-> Before using the tool, It's required to set up a `.env` file in the parent directory of the script or your home dir with the following environment variables:
+> Before using the tool, It's required to set up a `.env` file in the parent directory of the script or your home user dir [windows] or `$HOME/.config/civitai-cli-manager/.env` with the following environment variables:
 
 ```env
 CIVITAI_TOKEN=#https://developer.civitai.com/docs/getting-started/setup-profile#create-an-api-key
@@ -81,7 +80,7 @@ HTML_OUT=False # Some models require HTML conversion, some don't
 TEMP=0
 TOP_P=0
 
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-4o-mini # some frontier models are censored and may not explain the desired model
 OPENAI_API_KEY= # sk-proj
 
 GROQ_MODEL=llama-3.1-70b-versatile
@@ -93,32 +92,35 @@ The application intelligently locates your `.env` file, accommodating various pl
 ## Usage
 
 > [!NOTE]
-You can use the `search` command to search for models by name or tag to get the model ID.
+You can use the `search` command to search for models by query and filter by tag to get the model ID.
 
-You can also grab the ID from the Civitai... The model ID is the number in the URL after `/models/`, like so: https://civitai.com/models/`277058`/epicrealism-xl or https://civitai.com/models/`277058`/epicrealism-xl/versions/`453435`. Each model has a unique ID that can be used to download the model and a version ID that can be used to download a specific version of the model.
+> [!NOTE]
+You no longer need to grab the id from the URL. You can not search for models by name or tag and get the ID.
 
+*You can also grab the ID from the Civitai... The model ID is the number in the URL after `/models/`, like so: https://civitai.com/models/`277058`/epicrealism-xl or https://civitai.com/models/`277058`/epicrealism-xl/versions/`453435`. Each model has a unique ID that can be used to download the model and a version ID that can be used to download a specific version of the model.
+*
 ### Available Commands
 
 Once installed via pipx or pip:
 
 ```bash
 # List all available models
-civitai-cli-manager --list
+civitai-models list
 
 # Statistically summarize all models
-civitai-cli-manager --stats
+civitai-models stats
 
 # Get detailed information about a specific model [display images or description]
-civitai-cli-manager --details 12345 [--images | --desc]
+civitai-models details 12345 [--images | --desc]
 
 # Download a specific model variant [select flag will prompt you to select a model]
-civitai-cli-manager --download 54321 [--select]
+civitai-models download 54321 [--select]
 
 # Remove models from local storage
-civitai-cli-manager --remove
+civitai-models remove
 
 # Get a summary of a specific model with a options to select a LLM [--service ollama | openai | groq]
-civitai-cli-manager --explain 12345 [--service ollama | openai | groq]
+civitai-models explain 12345 [--service ollama | openai | groq]
 ```
 
 ## Dependencies
@@ -145,8 +147,9 @@ These dependencies enhance usability, including user interactions, downloadable 
 - [X] Add search locations for `.env`
 - [X] Add groqCloud integration
 - [X] Add sanity checks for permissions, folder locations, feedback
-- [ ] Add feature to download a update to a model if it already exists
-- [ ] Add feature to download a specific version of a model
+- [X] Add feature to download a update to a model if it already exists
+- [X] Add feature to download a specific version of a model
+- [ ] Add feature to have Ollama agents suggest a 5 models based on a prompt
 
 ### Contact
 
