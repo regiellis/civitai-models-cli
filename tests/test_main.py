@@ -1,6 +1,6 @@
 import pytest
 from typer.testing import CliRunner
-from ccm.cli import civitai_cli
+from civitai_models_manager.cli import civitai_cli
 
 @pytest.fixture
 def runner():

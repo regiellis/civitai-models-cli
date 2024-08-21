@@ -7,7 +7,7 @@ from .helpers import create_table
 from rich.console import Console
 import time
 
-from ccm import (OLLAMA_OPTIONS,)
+from civitai_models_manager import (OLLAMA_OPTIONS,)
 from ollama import Client as OllamaClient
 
 Ollama = OllamaClient(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None

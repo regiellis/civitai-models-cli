@@ -5,39 +5,31 @@ from typing import Final
 from rich.console import Console
 from dotenv import load_dotenv
 
-from ccm.modules.helpers import feedback_message
+from civitai_models_manager.modules.helpers import feedback_message
 
 
 def load_environment_variables(console: Console = Console()) -> None:
     """
     Load environment variables from .env file.
-
+    
     If the file is not found in the default location, it will be searched in the current directory.
     If still not found, a warning message will be printed to create the file using the sample.env provided.
     """
     env_paths = {
         "Windows": os.path.join(os.path.expanduser("~"), ".env"),
-        "Linux": os.path.join(
-            os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"
-        ),
-        "Darwin": os.path.join(
-            os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"
-        ),
+        "Linux": os.path.join(os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"),
+        "Darwin": os.path.join(os.path.expanduser("~"), ".config", "civitai-model-manager", ".env")
     }
-
+    
     system_platform = system()
     dotenv_path = env_paths.get(system_platform, ".env")
-
+    
     for path in [Path(dotenv_path), Path(".env")]:
         if path.exists():
             load_dotenv(str(path))
             return
-
-    feedback_message(
-        ".env file is missing. Please create one using the sample.env provided.",
-        "warning",
-    )
-
+    
+    feedback_message(".env file is missing. Please create one using the sample.env provided.", "warning")
 
 load_environment_variables(Console())
 
@@ -63,21 +55,11 @@ TYPES: Final = {
     "VAE": "VAE",
     "Wildcards": "wildcards",
     "Workflows": "workflows",
-    "Other": "other",
+    "Other": "other"
 }
 
 FILE_TYPES = (".safetensors", ".pt", ".pth", ".ckpt")
-MODEL_TYPES: Final = [
-    "SDXL 1.0",
-    "SDXL 0.9",
-    "SD 1.5",
-    "SD 1.4",
-    "SD 2.0",
-    "SD 2.0 768",
-    "SD 2.1",
-    "SD 2.1 768",
-    "Other",
-]
+MODEL_TYPES: Final = ["SDXL 1.0", "SDXL 0.9", "SD 1.5", "SD 1.4", "SD 2.0", "SD 2.0 768", "SD 2.1", "SD 2.1 768", "Other"]
 
 OLLAMA_OPTIONS: Final = {
     "model": os.getenv("OLLAMA_MODEL", ""),
@@ -99,17 +81,17 @@ OLLAMA_OPTIONS: Final = {
         "DO NOT OFFER ADVICE ON HOW TO IMPROVE THE DESCRIPTION!!"
         "Return the description in Markdown format.\n\n"
         "You will find the description below: \n\n"
-    ),
+    )
 }
 
 OPENAI_OPTIONS = {
     "api_key": os.getenv("OPENAI_API_KEY", ""),
     "model": os.getenv("OPENAI_MODEL", ""),
-    "system_template": OLLAMA_OPTIONS["system_template"],
+    "system_template": OLLAMA_OPTIONS["system_template"]
 }
 
 GROQ_OPTIONS = {
     "api_key": os.getenv("GROQ_API_KEY", ""),
     "model": os.getenv("GROQ_MODEL", ""),
-    "system_template": OLLAMA_OPTIONS["system_template"],
+    "system_template": OLLAMA_OPTIONS["system_template"]
 }

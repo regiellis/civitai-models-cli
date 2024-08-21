@@ -7,7 +7,7 @@ from rich.console import Console
 from .helpers import (feedback_message, get_model_folder, 
                       create_table, add_rows_to_table)
 from .utils import format_file_size, sort_models
-from ccm.config import (MODELS_DIR, FILE_TYPES, TYPES)
+from civitai_models_manager.config import (MODELS_DIR, FILE_TYPES, TYPES)
 
 __all__ = [
     "list_models_cli",

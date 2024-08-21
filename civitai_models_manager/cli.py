@@ -14,7 +14,7 @@
 # ]
 # ///
 
-from ccm import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
+from civitai_models_manager import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
                         CIVITAI_DOWNLOAD, CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
                         OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
 from .modules.helpers import feedback_message

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ccm"
+name = "civitai_models_manager"
 authors = [
     {name = "Regi E",email = "regi@bynine.io"}
 ]
@@ -42,5 +42,5 @@ Documentation = "https://github.com/regiellis/civitai-cli-manager/blob/main/READ
 "Bug Tracker" = "https://github.com/regiellis/civitai-cli-manager/issues"
 
 [project.scripts]
-civitai-models = "ccm.__main__:main"
+civitai-models = "civitai_models_manager.__main__:main"
 
