@@ -2,8 +2,9 @@
 
 > [!NOTE]
 Release 0.7.0 was another big refactor for the project. if you had a version before 0.7.0, it is recommended that you re-clone the repo and install the project
-with `pipx install .` or `pip install .` SInce the naming has changed, you will need to do a `pipx uninstall civitai-cli-manager` or `pip uninstall civitai-cli-manager` 
-to remove the old version. You can not run the tool using the new name `civitai-models` or `civitai-models --help` to see the new commands.
+with `pipx install .` or `pip install .` Since the module sturcture has changesd, so has the naming, you will need to do a `pipx uninstall civitai-cli-manager` 
+or `pip uninstall civitai-cli-manager` to remove the old version. You can not run the tool using the new name `civitai-models` or `civitai-models --help` 
+to see the new commands.
 
 > [!WARNING]
 > This tool is provided "as-is". It has primarily been used/tested on Ubuntu systems; YMMV on Windows/Subsystems but should work fine. I will be adding more features and testing on other platforms in the future as I move towards 1.0.0 release.
