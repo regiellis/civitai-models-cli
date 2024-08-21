@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import html2text
 from typing import Optional
 from rich.markdown import Markdown
@@ -28,7 +26,7 @@ def summarize_model_description(model, model_id: int, service: str, **kwargs) ->
                 model=kwargs.get("OLLAMA_OPTIONS")["model"],
                 messages=[
                     {"role": "assistant", "content": kwargs.get("OLLAMA_OPTIONS")["system_template"]},
-                    {"role": "user", "content": f"{kwargs.get("OLLAMA_OPTIONS")["system_template"]} : {description}"}
+                    {"role": "user", "content": f"{kwargs.get(\"OLLAMA_OPTIONS\")[\"system_template\"]} : {description}"}
                     # consider adding the system template
                     # to the prompt since not all models follow it
                 ],
