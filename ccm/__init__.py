@@ -1,7 +1,7 @@
 import os
 from platform import system
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Final
+from typing import Final
 from rich.console import Console
 from dotenv import load_dotenv
 

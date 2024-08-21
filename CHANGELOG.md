@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2024-08-15
+- **Hotfix**: Remove all instances of request and replaced with httpx to avoid conflicts with other libraries.
+
 ## [0.7.0] - 2024-08-20
 - **Documentation**: Created `CHANGELOG.md` to summarize updates from version 0.1 to 0.7.0, providing a clear history of changes for users.
 - **Testing**: 

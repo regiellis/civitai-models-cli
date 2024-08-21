@@ -64,7 +64,8 @@ You will need to have the `pytest` package installed to run the tests.
 Also, testing is not yet complete, so expect some failures...cause I have a 1 year old so time is limited. I will get to it...eventually. I know python....tests are important.
 
 ```bash
-`pytest` in the root directory of the project.```
+`pytest` in the root directory of the project.
+```
 
 ## Configuration
 
@@ -93,13 +94,11 @@ The application intelligently locates your `.env` file, accommodating various pl
 ## Usage
 
 > [!NOTE]
-You can use the `search` command to search for models by query and filter by tag to get the model ID.
+  You no longer need to grab the id from the URL. You can now search for models by name or tag and get the ID. You can use the `search` command to search for models by query and filter by tag to get the model ID.
 
-> [!NOTE]
-You no longer need to grab the id from the URL. You can not search for models by name or tag and get the ID.
 
-*You can also grab the ID from the Civitai... The model ID is the number in the URL after `/models/`, like so: https://civitai.com/models/`277058`/epicrealism-xl or https://civitai.com/models/`277058`/epicrealism-xl/versions/`453435`. Each model has a unique ID that can be used to download the model and a version ID that can be used to download a specific version of the model.
-*
+~~You can also grab the ID from the Civitai... The model ID is the number in the URL after `/models/`, like so: https://civitai.com/models/`277058`/epicrealism-xl or https://civitai.com/models/`277058`/epicrealism-xl/versions/`453435`. Each model has a unique ID that can be used to download the model and a version ID that can be used to download a specific version of the model.~~
+
 ### Available Commands
 
 Once installed via pipx or pip:
@@ -131,7 +130,7 @@ This tool requires Python 3.11 or higher and has the following dependencies:
 ```plaintext
 - typer
 - rich
-- requests
+- httpx
 - shellingham
 - tqdm
 - civitai

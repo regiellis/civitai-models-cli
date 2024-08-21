@@ -1,5 +1,5 @@
 import os
-import requests
+import httpx
 import typer
 from typing import Any, List, Dict, Optional
 from tqdm import tqdm
@@ -88,17 +88,17 @@ def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str,
 
 def download_file(url: str, path: str, desc: str) -> Optional[str]:
     try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
+        with httpx.stream("GET", url, follow_redirects=True) as response:
+            response.raise_for_status()
 
-        total_size = int(response.headers.get('content-length', 0))
-        with open(path, 'wb') as f, tqdm(total=total_size, unit='B', unit_scale=True, desc=f"Downloading {desc}", colour="cyan") as progress_bar:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    progress_bar.update(len(chunk))
+            total_size = int(response.headers.get('content-length', 0))
+            with open(path, 'wb') as f, tqdm(total=total_size, unit='B', unit_scale=True, desc=f"Downloading {desc}", colour="cyan") as progress_bar:
+                for chunk in response.iter_bytes(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        progress_bar.update(len(chunk))
         return path
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         feedback_message(f"Failed to download the file: {e} // Please check if you have permission to download files to the specified path.", "error")
         return None
 
