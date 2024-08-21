@@ -31,8 +31,8 @@ dependencies = [
    "groq"
 ]
 
-[tool.setuptools.dynamic]
-version = {attr = "civitai_models_manager.__version__"}
+[tool.hatch.version]
+path = "civitai_models_manager/__version__.py"
 
 [tool.setuptools]
 packages = ["ccm"]
