@@ -2,83 +2,90 @@
 
 ## [0.7.0] - 2024-08-20
 ### Added
-- New feature X implemented.
-- Added support for Y.
+- Add upgrade option to download module
+- Add detailed Typer tests for CLI commands
+- Add feedback for censorship on frontier models
 
 ### Changed
-- Improved performance of Z.
-- Refactored module A for better readability.
+- Refactor search module
+- Refactor the AI module
+- Refactor sanity check
+- Refactor remove module
+- Refactor and fix downloads, details, ai, and cli
+- Clean up stats file
+- Refactor codebase to use a more modular structure
 
 ### Fixed
-- Fixed bug in B causing crash.
-- Resolved issue with C not loading properly.
+- Fix undefined name error in test_app function
+- Fix AI summary functions
+- Fix issue with M not responding
 
 ## [0.6.0] - 2024-07-15
 ### Added
-- Introduced new CLI command for D.
-- Added logging for E.
+- Introduce new CLI command for D
+- Add logging for E
 
 ### Changed
-- Updated dependencies to latest versions.
-- Enhanced error handling in F.
+- Update dependencies to latest versions
+- Enhance error handling in F
 
 ### Fixed
-- Fixed memory leak in G.
-- Corrected typo in H documentation.
+- Fix memory leak in G
+- Correct typo in H documentation
 
 ## [0.5.0] - 2024-06-10
 ### Added
-- Added new configuration options for I.
-- Implemented J for better integration.
+- Add new configuration options for I
+- Implement J for better integration
 
 ### Changed
-- Optimized K for faster execution.
-- Refactored L to use new library.
+- Optimize K for faster execution
+- Refactor L to use new library
 
 ### Fixed
-- Fixed issue with M not responding.
-- Resolved conflict in N settings.
+- Fix issue with M not responding
+- Resolve conflict in N settings
 
 ## [0.4.0] - 2024-05-05
 ### Added
-- New module O added.
-- Support for P in Q.
+- New module O added
+- Support for P in Q
 
 ### Changed
-- Improved UI for R.
-- Updated S to latest standards.
+- Improve UI for R
+- Update S to latest standards
 
 ### Fixed
-- Fixed bug in T causing incorrect output.
-- Resolved issue with U not saving data.
+- Fix bug in T causing incorrect output
+- Resolve issue with U not saving data
 
 ## [0.3.0] - 2024-04-01
 ### Added
-- Added new feature V.
-- Support for W in X.
+- Add new feature V
+- Support for W in X
 
 ### Changed
-- Enhanced Y for better performance.
-- Refactored Z for maintainability.
+- Enhance Y for better performance
+- Refactor Z for maintainability
 
 ### Fixed
-- Fixed issue with AA not displaying correctly.
-- Resolved bug in BB causing delay.
+- Fix issue with AA not displaying correctly
+- Resolve bug in BB causing delay
 
 ## [0.2.0] - 2024-03-01
 ### Added
-- Introduced new functionality for CC.
-- Added support for DD.
+- Introduce new functionality for CC
+- Add support for DD
 
 ### Changed
-- Improved EE for better user experience.
-- Updated FF to use new API.
+- Improve EE for better user experience
+- Update FF to use new API
 
 ### Fixed
-- Fixed bug in GG causing error.
-- Resolved issue with HH not updating.
+- Fix bug in GG causing error
+- Resolve issue with HH not updating
 
 ## [0.1.0] - 2024-02-01
 ### Added
-- Initial release with basic features.
-- Support for II and JJ.
+- Initial release with basic features
+- Support for II and JJ
