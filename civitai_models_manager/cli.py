@@ -13,7 +13,7 @@
 #   "groq"
 # ]
 # ///
-
+from civitai_models_manager.__version__ import __version__
 from civitai_models_manager import (MODELS_DIR, CIVITAI_TOKEN, CIVITAI_MODELS, 
                         CIVITAI_DOWNLOAD, CIVITAI_VERSIONS, TYPES, FILE_TYPES, 
                         OLLAMA_OPTIONS, OPENAI_OPTIONS, GROQ_OPTIONS)
@@ -72,7 +72,7 @@ $ civitai-models help
 $ civitai-models version
 """
 
-__version__ = "0.7.3"
+__version__ = __version__
 
 __all__ = ["civitai_cli"]
 
