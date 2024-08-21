@@ -11,9 +11,8 @@ This module contains helper functions for the Civitai Model Manager.
 import os
 import typer
 
-from typing import Any, Dict, List, Optional, Tuple, Final
+from typing import Any, Dict
 from rich.console import Console
-from rich import print
 from rich.table import Table
 
 
