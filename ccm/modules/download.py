@@ -9,9 +9,7 @@ from .details import get_model_details
 
 __all__ = ["download_model_cli"]
 
-
 console = Console(soft_wrap=True)
-
 
 def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     feedback_message(f"Please select a version to download for model {model_name}.", "info")
@@ -38,6 +36,13 @@ def select_version(model_name: str, versions: List[Dict[str, Any]]) -> Optional[
     feedback_message(f"Version {selected_version_id} is not available for model {model_name}.", "error")
     return None
 
+def check_for_upgrade(model_path: str, selected_version: Dict[str, Any]) -> bool:
+    current_version = os.path.basename(model_path)
+    if current_version != selected_version['file']:
+        feedback_message(f"A newer version '{selected_version['file']}' is available.", "info")
+        return typer.confirm("Do you want to upgrade?")
+    return False
+
 def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str, 
                    TYPES, model_id: int, model_details: Dict[str, Any], select: bool = False) -> Optional[str]:
     model_name = model_details.get("name", f"Model_{model_id}")
@@ -45,14 +50,13 @@ def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str,
     model_meta = model_details.get("metadata", {})
     versions = model_details.get("versions", [])
     
-    if versions == [] and not model_details.get("parent_id"):
+    if not versions and not model_details.get("parent_id"):
         feedback_message(f"No versions available for model {model_name}.", "warning")
         return None
 
     if not select and not model_details.get("parent_id"):
         selected_version = versions[0]
     elif not select and model_details.get("parent_id"):
-        # Assume the model is a variant
         selected_version = {
             "id": model_id,
             "name": model_details.get("name", ""),
@@ -65,30 +69,24 @@ def download_model(MODELS_DIR: str, CIVITAI_DOWNLOAD: str, CIVITAI_TOKEN: str,
         if model_details.get("parent_id"):
             feedback_message(f"Model {model_name} is a variant of {model_details['parent_name']} // Model ID: {model_details['parent_id']} \r Needs to be a parent model", "warning")
             return None
-        # prompt user to select a version
         selected_version = select_version(model_name, versions)
     
     if not selected_version:
         feedback_message(f"A version is not available for model {model_name}.", "error")
         return None
 
-    # model_name = f"{model_name}_{selected_version['name'].replace('.', '')}"
-    download_url = f"{CIVITAI_DOWNLOAD}/{selected_version['id']}?token={CIVITAI_TOKEN}"
     model_folder = get_model_folder(MODELS_DIR, model_type, TYPES)
-    model_path = os.path.join(model_folder, selected_version.get('base_model', ''), f"{selected_version.get('file')}")
-    
+    model_path = os.path.join(model_folder, selected_version.get('base_model', ''), selected_version.get('file'))
 
     if os.path.exists(model_path):
-        feedback_message(f"Model {model_name} already exists at {model_path}. Skipping download.", "warning")
-        return None
-    
+        if not check_for_upgrade(model_path, selected_version):
+            feedback_message(f"Model {model_name} already exists at {model_path}. Skipping download.", "warning")
+            return None
 
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
-    return download_file(download_url, model_path, model_name)
-
+    return download_file(f"{CIVITAI_DOWNLOAD}/{selected_version['id']}?token={CIVITAI_TOKEN}", model_path, model_name)
 
 def download_file(url: str, path: str, desc: str) -> Optional[str]:
-    """Download a file from a given URL and save it to the specified path."""
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
@@ -103,8 +101,7 @@ def download_file(url: str, path: str, desc: str) -> Optional[str]:
     except requests.RequestException as e:
         feedback_message(f"Failed to download the file: {e} // Please check if you have permission to download files to the specified path.", "error")
         return None
-    
-# TODO: Look into dealing with partial downloads and resuming downloads
+
 def download_model_cli(identifier: str, select: bool = False, **kwargs) -> None:
     try:
         model_id = int(identifier)
