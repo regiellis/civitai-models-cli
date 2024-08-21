@@ -7,12 +7,17 @@ from .helpers import create_table
 from rich.console import Console
 import time
 
-from civitai_models_manager import (OLLAMA_OPTIONS,)
+from civitai_models_manager import (
+    OLLAMA_OPTIONS,
+)
 from ollama import Client as OllamaClient
 
-Ollama = OllamaClient(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None
+Ollama = (
+    OllamaClient(OLLAMA_OPTIONS["api_base"]) if OLLAMA_OPTIONS["api_base"] else None
+)
 
 console = Console()
+
 
 def check_models_dir() -> Dict[str, Any]:
     models_dir = os.environ.get("MODELS_DIR")
@@ -32,18 +37,26 @@ def check_models_dir() -> Dict[str, Any]:
 def check_civitai_token() -> Dict[str, Any]:
     token = os.environ.get("CIVITAI_TOKEN")
     if not token:
-        return {"status": False, "message": "CIVITAI_TOKEN environment variable not set"}
+        return {
+            "status": False,
+            "message": "CIVITAI_TOKEN environment variable not set",
+        }
     return {"status": True, "message": "CivitAI token check passed"}
 
 
 def check_api_availability() -> Dict[str, Any]:
-    civitai_models_url = os.environ.get("CIVITAI_MODELS", "https://civitai.com/api/v1/models")
+    civitai_models_url = os.environ.get(
+        "CIVITAI_MODELS", "https://civitai.com/api/v1/models"
+    )
     try:
         response = httpx.get(civitai_models_url, timeout=10)
         if response.status_code == 200:
             return {"status": True, "message": "API is accessible"}
         else:
-            return {"status": False, "message": f"API returned status code {response.status_code}"}
+            return {
+                "status": False,
+                "message": f"API returned status code {response.status_code}",
+            }
     except httpx.RequestError as e:
         return {"status": False, "message": f"Failed to connect to API: {str(e)}"}
 
@@ -55,7 +68,7 @@ def check_ollama() -> Dict[str, Any]:
             messages=[
                 {"role": "user", "content": "What is your purpose?"},
             ],
-            keep_alive=0 # Free up the VRAM
+            keep_alive=0,  # Free up the VRAM
         )
         print(response)
         return {"status": True, "message": "Ollama is accessible"}
@@ -72,17 +85,17 @@ def sanity_check_cli(**kwargs) -> None:
         },
         "OPTIONAL": {
             "OLLAMA": check_ollama,
-        }
+        },
     }
 
     results = {}
-    
+
     with console.status("[yellow]Running sanity checks...", spinner="dots") as status:
         for check, func in CHECKS["REQUIRED"].items():
             status.update(f"[yellow]Checking {check}...")
             results[check] = func()
             time.sleep(0.25)
-        
+
         if CHECKS["OPTIONAL"]:
             for check, func in CHECKS["OPTIONAL"].items():
                 if func is not None:
@@ -90,12 +103,14 @@ def sanity_check_cli(**kwargs) -> None:
                     results[check] = func()
                     time.sleep(0.25)
 
-    sanity_table = create_table(title="", 
-    columns=[
-        ("Check", "white"),
-        ("Status", "bright_yellow"),
-        ("Message", "bright_yellow")
-    ])
+    sanity_table = create_table(
+        title="",
+        columns=[
+            ("Check", "white"),
+            ("Status", "bright_yellow"),
+            ("Message", "bright_yellow"),
+        ],
+    )
 
     for check, result in results.items():
         status = "Pass" if result["status"] else "Fail"

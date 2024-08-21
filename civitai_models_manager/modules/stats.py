@@ -5,7 +5,9 @@ from rich.console import Console
 from .helpers import feedback_message, create_table
 from .utils import format_file_size
 
-__all__ = ["inspect_models_cli",]
+__all__ = [
+    "inspect_models_cli",
+]
 
 FILE_TYPES = (".safetensors", ".pt", ".pth", ".ckpt")
 
@@ -59,20 +61,26 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
 
     total_count = sum(model_counts.values())
 
-    inspect_table= create_table(
+    inspect_table = create_table(
         "",
-        [("Model Type", "bright_yellow bold"),
-         ("Models Per Type ", "bright_yellow"),
-         ("Model Per Directory", "bright_yellow"),
-         ("Model Path", "bright_yellow"),
-         (f"Model Breakdown // Total Model Count: {total_count}", "bright_yellow")]
+        [
+            ("Model Type", "bright_yellow bold"),
+            ("Models Per Type ", "bright_yellow"),
+            ("Model Per Directory", "bright_yellow"),
+            ("Model Path", "bright_yellow"),
+            (f"Model Breakdown // Total Model Count: {total_count}", "bright_yellow"),
+        ],
     )
 
     model_stats = OrderedDict(model_counts)
 
     for model_type, count in sorted(model_stats.items()):
         base_path = os.path.join(MODELS_DIR, model_type)
-        path_types = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))]
+        path_types = [
+            d
+            for d in os.listdir(base_path)
+            if os.path.isdir(os.path.join(base_path, d))
+        ]
 
         if not path_types:
             path_types_breakdown = "[white]No subdirectories[/white]"
@@ -81,14 +89,24 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
             total_subdir_files = 0
             for subdir in path_types:
                 subdir_path = os.path.join(base_path, subdir)
-                file_count = len([f for f in os.listdir(subdir_path) if os.path.isfile(os.path.join(subdir_path, f))])
+                file_count = len(
+                    [
+                        f
+                        for f in os.listdir(subdir_path)
+                        if os.path.isfile(os.path.join(subdir_path, f))
+                    ]
+                )
                 subdir_counts[subdir] = file_count
                 total_subdir_files += file_count
 
             breakdown_parts = []
             for subdir, subdir_count in subdir_counts.items():
-                percentage = subdir_count / total_subdir_files if total_subdir_files > 0 else 0
-                breakdown_parts.append(f"[white][bold]{subdir}:[/bold][/white] [bold]{subdir_count} ({percentage:.2%})[/bold]")
+                percentage = (
+                    subdir_count / total_subdir_files if total_subdir_files > 0 else 0
+                )
+                breakdown_parts.append(
+                    f"[white][bold]{subdir}:[/bold][/white] [bold]{subdir_count} ({percentage:.2%})[/bold]"
+                )
 
             path_types_breakdown = f"[bold]{', '.join(breakdown_parts)} (Total: {total_subdir_files})[/bold]"
 
@@ -97,7 +115,7 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
             f"{count}",
             f"[bright_yellow]{path_types_breakdown}[/bright_yellow]",
             os.path.join(MODELS_DIR, model_type),
-            f"{count/total_count:.2%}"
+            f"{count/total_count:.2%}",
         )
 
     stats_console.print(inspect_table)
@@ -105,12 +123,20 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
     # Get top 10 largest models
     model_sizes = get_model_sizes(MODELS_DIR)
 
-    largest_table = create_table("", [
-        ("Top 10 Largest Models // Model Name", "bright_yellow"),
-        ("Size on Disk", "bright_yellow bold"),
-        ("Model Path", "white")])
+    largest_table = create_table(
+        "",
+        [
+            ("Top 10 Largest Models // Model Name", "bright_yellow"),
+            ("Size on Disk", "bright_yellow bold"),
+            ("Model Path", "white"),
+        ],
+    )
 
-    for model_name, size in sorted(model_sizes.items(), key=lambda x: float(x[1].split()[0]), reverse=True)[:10]:
-        largest_table.add_row(model_name, size, find_model_by_name(MODELS_DIR, model_name))
+    for model_name, size in sorted(
+        model_sizes.items(), key=lambda x: float(x[1].split()[0]), reverse=True
+    )[:10]:
+        largest_table.add_row(
+            model_name, size, find_model_by_name(MODELS_DIR, model_name)
+        )
 
     stats_console.print(largest_table)
