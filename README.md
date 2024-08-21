@@ -1,4 +1,4 @@
-# Civitai CLI Manager
+# Civitai Models CLI
 
 > [!NOTE]
 Release 0.7.0 was another big refactor for the project. if you had a version before 0.7.0, it is recommended that you re-clone the repo and install the project
@@ -11,7 +11,7 @@ to see the new commands.
 
 ## Overview
 
-**Civitai CLI Manager** is an unofficial Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **Civitai platform**. This came about as a solution to quickly working with and manage models out
+**Civitai Models CLI** is an unofficial Command Line Interface (CLI) tool I created to streamline the process of retrieving and managing AI models from the **Civitai platform**. This came about as a solution to quickly working with and manage models out
 side the main site.
 
 I initially intended for this to be just a module in a larger **Comfy CLI** toolset, but I found it so useful in its standalone format that I decided to share it with anyone who might feel the same way.
