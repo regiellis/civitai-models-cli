@@ -43,7 +43,7 @@ def test_version_command():
 
 
 def test_app():
-    result = runner.invoke(app, ["--help"])
+    result = runner.invoke(civitai_cli, ["--help"])
     assert result.exit_code == 0
     assert "Usage" in result.stdout
     assert "Options" in result.stdout
