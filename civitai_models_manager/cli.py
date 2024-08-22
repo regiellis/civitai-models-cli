@@ -117,6 +117,11 @@ def search_models_command(
     help="Get a summary of a specific model by ID using the specified service (default is Ollama).",
 )
 def explain_model_command(identifier: str, service: str = "ollama"):
+    """
+    Get a summary of a specific model by ID using the specified service (default is Ollama).
+    :param identifier: The ID of the model.
+    :param service: The specified service to use (default is "ollama").
+    """
     explain_model_cli(
         identifier,
         service,
@@ -130,6 +135,10 @@ def explain_model_command(identifier: str, service: str = "ollama"):
 
 @civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")
 def sanity_check_command():
+    """
+    Check to see if the app is ready to run.
+    :return: The result of the sanity check.
+    """
     return sanity_check_cli(
         CIVITAI_MODELS=CIVITAI_MODELS,
         CIVITAI_VERSIONS=CIVITAI_VERSIONS,
@@ -143,11 +152,19 @@ def sanity_check_command():
     "list", help="List available models along with their types and paths."
 )
 def list_models_command():
+    """
+    List available models along with their types and paths.
+    :return: The list of available models.
+    """
     list_models_cli()
 
 
 @civitai_cli.command("stats", help="Stats on the parent models directory.")
 def stats_command():
+    """
+    Stats on the parent models directory.
+    :return: The stats on the parent models directory.
+    """
     return inspect_models_cli(MODELS_DIR=MODELS_DIR)
 
 
@@ -155,6 +172,13 @@ def stats_command():
     "details", help="Get detailed information about a specific model by ID."
 )
 def details_command(identifier: str, desc: bool = False, images: bool = False):
+    """
+    Get detailed information about a specific model by ID.
+    :param identifier: The ID of the model.
+    :param desc: The description of the model.
+    :param images: The images of the model.
+    :return: The detailed information about the model.
+    """
     get_model_details_cli(
         identifier,
         desc,
@@ -166,6 +190,12 @@ def details_command(identifier: str, desc: bool = False, images: bool = False):
 
 @civitai_cli.command("download", help="Download a specific model variant by ID.")
 def download_model_command(identifier: str, select: bool = False):
+    """
+    Download a specific model variant by ID.
+    :param identifier: The ID of the model.
+    :param select: The selection of the model.
+    :return: The download of the model.
+    """
     download_model_cli(
         identifier,
         select,
@@ -181,9 +211,17 @@ def download_model_command(identifier: str, select: bool = False):
 
 @civitai_cli.command("remove", help="Remove specified models from local storage.")
 def remove_models_command():
+    """
+    Remove specified models from local storage.
+    :return: The removal of the models.
+    """
     remove_models_cli(MODELS_DIR=MODELS_DIR, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 
 @civitai_cli.command("version", help="Current version of the CLI.")
 def version_command():
+    """
+    Current version of the CLI.
+    :return: The current version of the CLI.
+    """
     feedback_message(f"Current version: {__version__}", "info")

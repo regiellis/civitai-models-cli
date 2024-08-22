@@ -1,45 +1,94 @@
 import os
 from platform import system
 from pathlib import Path
-from typing import Final
+from typing import Dict, List, Final
 from rich.console import Console
 from dotenv import load_dotenv
 
 from civitai_models_manager.modules.helpers import feedback_message
 
 
-def load_environment_variables(console: Console = Console()) -> None:
+def load_environment_variables() -> None:
     """
-    Load environment variables from .env file.
+    Load environment variables from a .env file.
 
-    If the file is not found in the default location, it will be searched in the current directory.
-    If still not found, a warning message will be printed to create the file using the sample.env provided.
+    This function searches for the .env file in multiple predefined locations
+    across different operating systems. If the file is not found, it provides
+    informative feedback to the user about where to create the .env file.
+
+    :raises FileNotFoundError: If the .env file is not found in any of the
+                               searched locations.
+
+    **Search Locations**:
+
+    - Common:
+      - `~/.config/civitai-model-manager/.env`
+      - `~/.civitai-model-manager/.env`
+      - `~/.env`
+      - `./.env`
+
+    - Windows:
+      - `~/AppData/Roaming/civitai-model-manager/.env`
+      - `~/Documents/civitai-model-manager/.env`
+
+    - Linux:
+      - `~/.local/share/civitai-model-manager/.env`
+
+    - Darwin (macOS):
+      - `~/Library/Application Support/civitai-model-manager/.env`
     """
-    env_paths = {
-        "Windows": os.path.join(os.path.expanduser("~"), ".env"),
-        "Linux": os.path.join(
-            os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"
-        ),
-        "Darwin": os.path.join(
-            os.path.expanduser("~"), ".config", "civitai-model-manager", ".env"
-        ),
+    # Define potential .env file locations
+    env_locations: Dict[str, List[str]] = {
+        "common": [
+            "~/.config/civitai-model-manager/.env",
+            "~/.civitai-model-manager/.env",
+            "~/.env",
+            "./.env",
+        ],
+        "Windows": [
+            "~/AppData/Roaming/civitai-model-manager/.env",
+            "~/Documents/civitai-model-manager/.env",
+        ],
+        "Linux": [
+            "~/.local/share/civitai-model-manager/.env",
+        ],
+        "Darwin": [
+            "~/Library/Application Support/civitai-model-manager/.env",
+        ],
     }
 
-    system_platform = system()
-    dotenv_path = env_paths.get(system_platform, ".env")
+    # Get the current operating system
+    system_platform = os.name
 
-    for path in [Path(dotenv_path), Path(".env")]:
-        if path.exists():
-            load_dotenv(str(path))
+    # Combine common locations with OS-specific locations
+    search_paths = env_locations["common"] + env_locations.get(system_platform, [])
+
+    # Search for .env file
+    for path in search_paths:
+        env_path = Path(path).expanduser().resolve()
+        if env_path.is_file():
+            load_dotenv(env_path)
+            #feedback_message(f"Loaded environment variables from {env_path}", "info")
             return
 
+    # If .env file is not found, provide detailed feedback
     feedback_message(
-        ".env file is missing. Please create one using the sample.env provided.",
+        ".env file not found in any of the following locations:", "warning"
+    )
+    for path in search_paths:
+        feedback_message(f"  - {Path(path).expanduser()}", "info")
+
+    feedback_message(
+        "\nPlease create a .env file in one of the above locations using the sample.env provided.",
         "warning",
+    )
+    feedback_message(
+        "Recommended location: ~/.config/civitai-model-manager/.env", "info"
     )
 
 
-load_environment_variables(Console())
+# Usage
+load_environment_variables()
 
 MODELS_DIR: Final = os.getenv("MODELS_DIR", "")
 CIVITAI_TOKEN: Final = os.getenv("CIVITAI_TOKEN", "")

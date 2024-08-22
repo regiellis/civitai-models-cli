@@ -10,6 +10,12 @@ console = Console(soft_wrap=True)
 
 
 def feedback_message(message: str, type: str = "info") -> None:
+    """
+    Display a feedback message with appropriate styling based on the message type.
+
+    :param message: The message to display.
+    :param type: The type of the message (info, warning, error, exception). Defaults to "info".
+    """
     options = {
         "types": {
             "info": "green",
@@ -37,6 +43,9 @@ def feedback_message(message: str, type: str = "info") -> None:
 
 
 def get_model_folder(models_dir: str, model_type: str, ref_types: dict) -> str:
+    """
+    Get the folder path for the model based on the model type.
+    """
     if model_type not in ref_types:
         console.print(
             f"Model type '{model_type}' is not mapped to any folder. Please select a folder to download the model."

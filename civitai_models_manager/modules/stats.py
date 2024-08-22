@@ -15,6 +15,11 @@ stats_console = Console(soft_wrap=True)
 
 
 def count_models(model_dir: str) -> Dict[str, int]:
+    """
+    Count the number of models in the directory.
+    :param model_dir: The directory of the models.
+    :return: The number of models in the directory.
+    """
     model_counts = {}
     for root, _, files in os.walk(model_dir):
 
@@ -83,7 +88,15 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
         ]
 
         if not path_types:
-            path_types_breakdown = "[white]No subdirectories[/white]"
+            file_count = len(
+                [
+                    f
+                    for f in os.listdir(base_path)
+                    if os.path.isfile(os.path.join(base_path, f)) and
+                    any(f.lower().endswith(ext) for ext in FILE_TYPES)
+                ]
+            )
+            path_types_breakdown = f"[white]No subdirectories, {file_count} files[/white]"
         else:
             subdir_counts = {}
             total_subdir_files = 0
@@ -93,7 +106,8 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
                     [
                         f
                         for f in os.listdir(subdir_path)
-                        if os.path.isfile(os.path.join(subdir_path, f))
+                        if os.path.isfile(os.path.join(subdir_path, f)) and
+                        any(f.lower().endswith(ext) for ext in FILE_TYPES)
                     ]
                 )
                 subdir_counts[subdir] = file_count
@@ -110,12 +124,13 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
 
             path_types_breakdown = f"[bold]{', '.join(breakdown_parts)} (Total: {total_subdir_files})[/bold]"
 
+        percentage = count / total_count if total_count > 0 else 0
         inspect_table.add_row(
             model_type,
             f"{count}",
             f"[bright_yellow]{path_types_breakdown}[/bright_yellow]",
             os.path.join(MODELS_DIR, model_type),
-            f"{count/total_count:.2%}",
+            f"{percentage:.2%}",
         )
 
     stats_console.print(inspect_table)
