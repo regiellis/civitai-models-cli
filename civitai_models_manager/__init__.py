@@ -68,7 +68,7 @@ def load_environment_variables() -> None:
         env_path = Path(path).expanduser().resolve()
         if env_path.is_file():
             load_dotenv(env_path)
-            #feedback_message(f"Loaded environment variables from {env_path}", "info")
+            # feedback_message(f"Loaded environment variables from {env_path}", "info")
             return
 
     # If .env file is not found, provide detailed feedback

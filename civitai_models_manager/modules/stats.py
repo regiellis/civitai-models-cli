@@ -92,11 +92,13 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
                 [
                     f
                     for f in os.listdir(base_path)
-                    if os.path.isfile(os.path.join(base_path, f)) and
-                    any(f.lower().endswith(ext) for ext in FILE_TYPES)
+                    if os.path.isfile(os.path.join(base_path, f))
+                    and any(f.lower().endswith(ext) for ext in FILE_TYPES)
                 ]
             )
-            path_types_breakdown = f"[white]No subdirectories, {file_count} files[/white]"
+            path_types_breakdown = (
+                f"[white]No subdirectories, {file_count} files[/white]"
+            )
         else:
             subdir_counts = {}
             total_subdir_files = 0
@@ -106,8 +108,8 @@ def inspect_models_cli(MODELS_DIR: str) -> None:
                     [
                         f
                         for f in os.listdir(subdir_path)
-                        if os.path.isfile(os.path.join(subdir_path, f)) and
-                        any(f.lower().endswith(ext) for ext in FILE_TYPES)
+                        if os.path.isfile(os.path.join(subdir_path, f))
+                        and any(f.lower().endswith(ext) for ext in FILE_TYPES)
                     ]
                 )
                 subdir_counts[subdir] = file_count

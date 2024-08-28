@@ -88,7 +88,7 @@ def local_search_cli(query: str, MODELS_DIR: str, FILE_TYPES: List[str]) -> None
     for model_name, model_type, model_path, model_size in models:
         if query in model_name.lower():
             search_results.append((model_name, model_path, model_size))
-            
+
     search_results_table = create_table(
         title="",
         columns=[("Model Name", "bright_yellow"), ("Path", "white")],
@@ -98,7 +98,7 @@ def local_search_cli(query: str, MODELS_DIR: str, FILE_TYPES: List[str]) -> None
             search_results_table,
             {model_name: f"{model_path} [bold][yellow]{model_size}[/yellow][/bold]"},
         )
-        
+
     console.print(search_results_table)
     # display_models_table(search_results, model_type)
 

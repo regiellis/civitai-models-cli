@@ -131,7 +131,8 @@ def explain_model_command(identifier: str, service: str = "ollama"):
         OPENAI_OPTIONS=OPENAI_OPTIONS,
         GROQ_OPTIONS=GROQ_OPTIONS,
     )
-    
+
+
 @civitai_cli.command("local-search", help="Search for models stored on disk.")
 def local_search_command(query: str):
     return local_search_cli(query, MODELS_DIR=MODELS_DIR, FILE_TYPES=FILE_TYPES)
