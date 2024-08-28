@@ -29,7 +29,7 @@ from .modules.helpers import feedback_message
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
 from .modules.details import get_model_details_cli
-from .modules.list import list_models_cli
+from .modules.list import list_models_cli, local_search_cli
 from .modules.download import download_model_cli
 from .modules.ai import explain_model_cli
 from .modules.search import search_cli
@@ -131,6 +131,10 @@ def explain_model_command(identifier: str, service: str = "ollama"):
         OPENAI_OPTIONS=OPENAI_OPTIONS,
         GROQ_OPTIONS=GROQ_OPTIONS,
     )
+    
+@civitai_cli.command("local-search", help="Search for models stored on disk.")
+def local_search_command(query: str):
+    return local_search_cli(query, MODELS_DIR=MODELS_DIR, FILE_TYPES=FILE_TYPES)
 
 
 @civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")

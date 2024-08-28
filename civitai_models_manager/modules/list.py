@@ -10,6 +10,7 @@ from civitai_models_manager import MODELS_DIR, FILE_TYPES, TYPES
 
 __all__ = [
     "list_models_cli",
+    "local_search_cli",
     "display_models_table",
     "list_models",
     "select_model_type",
@@ -77,6 +78,29 @@ def select_model_type(types: Dict[str, str]) -> Optional[str]:
         style=custom_style,
     ).ask()
     return selected if selected != "Exit" else None
+
+
+def local_search_cli(query: str, MODELS_DIR: str, FILE_TYPES: List[str]) -> None:
+    """Search for models stored on disk."""
+    models = list_models(MODELS_DIR, FILE_TYPES)
+    query = query.lower()
+    search_results = []
+    for model_name, model_type, model_path, model_size in models:
+        if query in model_name.lower():
+            search_results.append((model_name, model_path, model_size))
+            
+    search_results_table = create_table(
+        title="",
+        columns=[("Model Name", "bright_yellow"), ("Path", "white")],
+    )
+    for model_name, model_path, model_size in search_results:
+        add_rows_to_table(
+            search_results_table,
+            {model_name: f"{model_path} [bold][yellow]{model_size}[/yellow][/bold]"},
+        )
+        
+    console.print(search_results_table)
+    # display_models_table(search_results, model_type)
 
 
 def list_models_cli() -> None:

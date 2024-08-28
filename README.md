@@ -16,7 +16,7 @@ side the main site.
 
 I initially intended for this to be just a module in a larger **Comfy CLI** toolset, but I found it so useful in its standalone format that I decided to share it with anyone who might feel the same way.
 
-![screenshot](image.png)
+![screenshot](https://raw.githubusercontent.com/regiellis/civitai-models-cli/main/image.png)
 
 ## Why
 

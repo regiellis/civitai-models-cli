@@ -1,19 +1,22 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.7.5] - 2024-08-15
+## [0.7.6] - 2024-08-28
+- **Feaeture**: Added a new local search feature to search for models in the local modeldirectory.
+
+## [0.7.5] - 2024-08-21
 - **Hotfix**: Removed unused imports and cleaned up the code for better maintainability and readability.
 
-## [0.7.4] - 2024-08-15
+## [0.7.4] - 2024-08-21
 - **Windows Fixes**: Odds and Ends to get everything working on windows.
 
-## [0.7.3] - 2024-08-15
+## [0.7.3] - 2024-08-21
 - **PyPI Naming Fix**: Fixed naming of internal package so that tool can be uploaded to PyPI.
 
-## [0.7.2] - 2024-08-15
+## [0.7.2] - 2024-08-21
 - **Version Bump**: v0.7.1 to v0.7.2
 
-## [0.7.1] - 2024-08-15
+## [0.7.1] - 2024-08-21
 - **Hotfix**: Remove all instances of request and replaced with httpx to avoid conflicts with other libraries.
 
 ## [0.7.0] - 2024-08-20

@@ -35,8 +35,8 @@ dependencies = [
 path = "civitai_models_manager/__version__.py"
 
 [tool.setuptools]
-packages = ["ccm"]
-package-dir = {"" = "ccm"}
+packages = ["civitai_models_manager"]
+package-dir = {"" = "civitai_models_manager"}
 
 
 [project.urls]
