@@ -1,5 +1,6 @@
 import httpx
 import subprocess
+import json
 
 from typing import Any, Dict, Optional
 import html2text
@@ -7,6 +8,7 @@ import questionary
 
 from .helpers import feedback_message, create_table, add_rows_to_table
 from .utils import safe_get, safe_url, format_file_size
+from enum import Enum
 from rich.text import Text
 from rich.console import Console
 
@@ -16,9 +18,15 @@ __all__ = ["get_model_details_cli"]
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
 
-
 def fetch_model_data(url: str, model_id: int) -> Optional[Dict]:
     return make_request(f"{url}/{model_id}")
+class DetailActions(Enum):
+    LOOK_IMAGES = "Look up Images for the Model"
+    FULL_DESCRIPTION = "Look at full Description"
+    ANOTHER_MODEL = "Get Details on a Version of this Model"
+    DOWNLOAD_MODEL = "Download this Model"
+    DOWNLOAD_VERSION = "Download a Version"
+    CANCEL = "Cancel"
 
 
 def fetch_version_data(
@@ -220,16 +228,29 @@ def print_model_details(
         feedback_message(
             f"No versions available for model {model_details['name']}.", "warning"
         )
-
-    # Ask user if they want to download the model using questionary
-    # download_model = questionary.confirm("Would you like to download this model?").ask()
-    download_model_question = questionary.select(
-        "Would you like to download this model or a version",
-        choices=["Model", "Version", "Cancel"],
+        
+    details_action_question = questionary.select(
+        "What would you like to do?",
+        choices=[action.value for action in DetailActions],
     ).ask()
-    if download_model_question == "Model":
+    
+    if details_action_question == "Look up Images for the Model":
+        subprocess.run(f"civitai-models details --images {model_details['id']}", shell=True)
+    elif details_action_question == "Look at full Description":
+        subprocess.run(f"civitai-models details --desc {model_details['id']}", shell=True)
+    elif details_action_question == "Get Details on a Version of this Model":
+        version_details = questionary.select(
+            "Select a version to get details on",
+            choices=[f"{version['id']} - {version['name']}" for version in versions],
+        ).ask()
+        
+        if version_details:
+            subprocess.run(f"civitai-models details {int(version_details.split(' ')[0])}", shell=True)
+        else:
+            feedback_message("Model version details not selected", "warning")
+    elif details_action_question == "Download this Model":
         subprocess.run(f"civitai-models download {model_details['id']}", shell=True)
-    elif download_model_question == "Version":
+    elif details_action_question == "Download a Version":
         subprocess.run(
             f"civitai-models download {model_details['id']} --select", shell=True
         )
