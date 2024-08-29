@@ -12,6 +12,8 @@
 #   "groq"
 # ]
 # ///
+import asyncio
+
 from civitai_models_manager.__version__ import __version__
 from civitai_models_manager import (
     MODELS_DIR,
@@ -32,7 +34,7 @@ from .modules.details import get_model_details_cli
 from .modules.list import list_models_cli, local_search_cli
 from .modules.download import download_model_cli
 from .modules.ai import explain_model_cli
-from .modules.search import search_cli
+from .modules.search import search_cli_sync
 from .modules.remove import remove_models_cli
 import typer
 
@@ -100,7 +102,7 @@ def search_models_command(
     sort: str = "Highest Rated",
     period: str = "AllTime",
 ):
-    search_cli(
+    search_cli_sync(
         query,
         tag,
         types,

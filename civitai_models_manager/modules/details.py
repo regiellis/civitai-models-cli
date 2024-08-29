@@ -1,6 +1,5 @@
 import httpx
 import subprocess
-import json
 
 from typing import Any, Dict, Optional
 import html2text
@@ -160,7 +159,7 @@ def print_model_details(
     console.print(model_table)
 
     if desc:
-        desc_table = create_table("Description", [("Description", "cyan")])
+        desc_table = create_table("", [("Description", "cyan")])
         desc_table.add_row(h2t.handle(model_details["description"]))
         console.print(desc_table)
 
