@@ -1,8 +1,11 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.7.7] - 2024-08-29
+- **Feature**:  "More Detail options and New Search Logic"
+
 ## [0.7.6] - 2024-08-28
-- **Feaeture**: Added a new local search feature to search for models in the local modeldirectory.
+- **Feaeture**: Added a new local search feature to search for models in the local model directory.
 
 ## [0.7.5] - 2024-08-21
 - **Hotfix**: Removed unused imports and cleaned up the code for better maintainability and readability.

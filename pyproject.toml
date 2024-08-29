@@ -28,7 +28,9 @@ dependencies = [
    "questionary",
    "ollama",
    "openai",
-   "groq"
+   "groq",
+   "tenacity",
+   "asyncio"
 ]
 
 [tool.hatch.version]

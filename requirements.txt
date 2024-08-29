@@ -8,3 +8,5 @@ questionary
 ollama
 openai
 groq
+asyncio
+tenacity
