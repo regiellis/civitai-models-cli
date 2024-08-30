@@ -17,8 +17,11 @@ __all__ = ["get_model_details_cli"]
 console = Console(soft_wrap=True)
 h2t = html2text.HTML2Text()
 
+
 def fetch_model_data(url: str, model_id: int) -> Optional[Dict]:
     return make_request(f"{url}/{model_id}")
+
+
 class DetailActions(Enum):
     LOOK_IMAGES = "Look up Images for the Model"
     FULL_DESCRIPTION = "Look at full Description"
@@ -227,24 +230,31 @@ def print_model_details(
         feedback_message(
             f"No versions available for model {model_details['name']}.", "warning"
         )
-        
+
     details_action_question = questionary.select(
         "What would you like to do?",
         choices=[action.value for action in DetailActions],
     ).ask()
-    
+
     if details_action_question == "Look up Images for the Model":
-        subprocess.run(f"civitai-models details --images {model_details['id']}", shell=True)
+        subprocess.run(
+            f"civitai-models details --images {model_details['id']}", shell=True
+        )
     elif details_action_question == "Look at full Description":
-        subprocess.run(f"civitai-models details --desc {model_details['id']}", shell=True)
+        subprocess.run(
+            f"civitai-models details --desc {model_details['id']}", shell=True
+        )
     elif details_action_question == "Get Details on a Version of this Model":
         version_details = questionary.select(
             "Select a version to get details on",
             choices=[f"{version['id']} - {version['name']}" for version in versions],
         ).ask()
-        
+
         if version_details:
-            subprocess.run(f"civitai-models details {int(version_details.split(' ')[0])}", shell=True)
+            subprocess.run(
+                f"civitai-models details {int(version_details.split(' ')[0])}",
+                shell=True,
+            )
         else:
             feedback_message("Model version details not selected", "warning")
     elif details_action_question == "Download this Model":
@@ -254,7 +264,7 @@ def print_model_details(
             f"civitai-models download {model_details['id']} --select", shell=True
         )
     else:
-        feedback_message("Model download cancelled.", "warning")
+        feedback_message("Model action cancelled.", "warning")
 
 
 def get_model_details_cli(

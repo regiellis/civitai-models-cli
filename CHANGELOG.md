@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.7.8] - 2024-08-29
+- **Feature**:  "Added Dockerfile; Lowered reqs for python "
+
 ## [0.7.7] - 2024-08-29
 - **Feature**:  "More Detail options and New Search Logic"
 

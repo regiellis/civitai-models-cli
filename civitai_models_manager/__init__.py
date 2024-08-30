@@ -1,8 +1,6 @@
 import os
-from platform import system
 from pathlib import Path
 from typing import Dict, List, Final
-from rich.console import Console
 from dotenv import load_dotenv
 
 from civitai_models_manager.modules.helpers import feedback_message
