@@ -1,7 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.7.8] - 2024-08-29
+## [0.7.9] - 2024-08-30
+- **Feature**:  "Abilty to create a .env file if one doesnt exist on first run"
+
+## [0.7.8] - 2024-08-30
 - **Feature**:  "Added Dockerfile; Lowered reqs for python "
 
 ## [0.7.7] - 2024-08-29

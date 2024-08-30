@@ -5,6 +5,38 @@ from dotenv import load_dotenv, set_key
 
 from civitai_models_manager.modules.helpers import feedback_message
 
+def get_required_input(prompt: str) -> str:
+    """
+    Prompt the user for input and ensure a non-empty response.
+
+    :param prompt: The prompt to display to the user.
+    :return: The non-empty user input.
+    """
+    while True:
+        response = input(prompt).strip()
+        if response:
+            return response
+        feedback_message("This field is required. Please enter a value.", "warning")
+
+def validate_directory(path: str) -> str:
+    """
+    Validate that the given path is a directory and create it if it doesn't exist.
+
+    :param path: The directory path to validate.
+    :return: The validated directory path.
+    """
+    dir_path = Path(path).expanduser().resolve()
+    if not dir_path.exists():
+        try:
+            dir_path.mkdir(parents=True)
+            feedback_message(f"Created directory: {dir_path}", "info")
+        except Exception as e:
+            feedback_message(f"Error creating directory: {e}", "error")
+            return validate_directory(get_required_input("Please enter a valid directory path: "))
+    elif not dir_path.is_dir():
+        feedback_message(f"{dir_path} is not a directory.", "error")
+        return validate_directory(get_required_input("Please enter a valid directory path: "))
+    return str(dir_path)
 
 def create_env_file(env_path: Path) -> None:
     """
@@ -15,17 +47,16 @@ def create_env_file(env_path: Path) -> None:
     feedback_message(f"Creating new .env file at {env_path}", "info")
 
     # Ask for CIVITAI_TOKEN
-    civitai_token = input(
+    civitai_token = get_required_input(
         "Enter your CIVITAI_TOKEN (https://developer.civitai.com/docs/getting-started/setup-profile#create-an-api-key): "
-    ).strip()
+    )
     set_key(env_path, "CIVITAI_TOKEN", civitai_token)
 
     # Ask for MODELS_DIR
-    models_dir = input("Enter the path to your models directory: ").strip()
+    models_dir = validate_directory(get_required_input("Enter the path to your models directory: "))
     set_key(env_path, "MODELS_DIR", models_dir)
 
     feedback_message(f".env file created successfully at {env_path}", "info")
-
 
 def load_environment_variables() -> None:
     """
@@ -93,7 +124,6 @@ def load_environment_variables() -> None:
         load_dotenv(env_path)
     else:
         raise FileNotFoundError("No .env file found and user chose not to create one.")
-
 
 # Usage
 load_environment_variables()
