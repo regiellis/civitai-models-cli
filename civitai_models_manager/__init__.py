@@ -1,39 +1,42 @@
 import os
 from pathlib import Path
 from typing import Dict, List, Final
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 
 from civitai_models_manager.modules.helpers import feedback_message
 
 
+def create_env_file(env_path: Path) -> None:
+    """
+    Create a new .env file with user input for required environment variables.
+
+    :param env_path: Path where the .env file will be created.
+    """
+    feedback_message(f"Creating new .env file at {env_path}", "info")
+
+    # Ask for CIVITAI_TOKEN
+    civitai_token = input(
+        "Enter your CIVITAI_TOKEN (https://developer.civitai.com/docs/getting-started/setup-profile#create-an-api-key): "
+    ).strip()
+    set_key(env_path, "CIVITAI_TOKEN", civitai_token)
+
+    # Ask for MODELS_DIR
+    models_dir = input("Enter the path to your models directory: ").strip()
+    set_key(env_path, "MODELS_DIR", models_dir)
+
+    feedback_message(f".env file created successfully at {env_path}", "info")
+
+
 def load_environment_variables() -> None:
     """
-    Load environment variables from a .env file.
+    Load environment variables from a .env file or create one if not found.
 
     This function searches for the .env file in multiple predefined locations
     across different operating systems. If the file is not found, it provides
-    informative feedback to the user about where to create the .env file.
+    the option to create a new .env file.
 
     :raises FileNotFoundError: If the .env file is not found in any of the
-                               searched locations.
-
-    **Search Locations**:
-
-    - Common:
-      - `~/.config/civitai-model-manager/.env`
-      - `~/.civitai-model-manager/.env`
-      - `~/.env`
-      - `./.env`
-
-    - Windows:
-      - `~/AppData/Roaming/civitai-model-manager/.env`
-      - `~/Documents/civitai-model-manager/.env`
-
-    - Linux:
-      - `~/.local/share/civitai-model-manager/.env`
-
-    - Darwin (macOS):
-      - `~/Library/Application Support/civitai-model-manager/.env`
+                               searched locations and user chooses not to create one.
     """
     # Define potential .env file locations
     env_locations: Dict[str, List[str]] = {
@@ -69,27 +72,57 @@ def load_environment_variables() -> None:
             # feedback_message(f"Loaded environment variables from {env_path}", "info")
             return
 
-    # If .env file is not found, provide detailed feedback
+    # If .env file is not found, provide option to create one
     feedback_message(
         ".env file not found in any of the following locations:", "warning"
     )
     for path in search_paths:
         feedback_message(f"  - {Path(path).expanduser()}", "info")
 
-    feedback_message(
-        "\nPlease create a .env file in one of the above locations using the sample.env provided.",
-        "warning",
+    create_new = (
+        input("Would you like to create a new .env file? (y/n): ").lower().strip()
     )
-    feedback_message(
-        "Recommended location: ~/.config/civitai-model-manager/.env", "info"
-    )
+    if create_new == "y":
+        default_path = Path("~/.config/civitai-model-manager/.env").expanduser()
+        custom_path = input(
+            f"Enter path for new .env file (default: {default_path}): "
+        ).strip()
+        env_path = Path(custom_path).expanduser() if custom_path else default_path
+        env_path.parent.mkdir(parents=True, exist_ok=True)
+        create_env_file(env_path)
+        load_dotenv(env_path)
+    else:
+        raise FileNotFoundError("No .env file found and user chose not to create one.")
 
 
 # Usage
 load_environment_variables()
 
-MODELS_DIR: Final = os.getenv("MODELS_DIR", "")
-CIVITAI_TOKEN: Final = os.getenv("CIVITAI_TOKEN", "")
+# Set environment variables
+os.environ["MODELS_DIR"] = os.getenv("MODELS_DIR", "")
+os.environ["CIVITAI_TOKEN"] = os.getenv("CIVITAI_TOKEN", "")
+os.environ["OLLAMA_MODEL"] = os.getenv("OLLAMA_MODEL", "")
+os.environ["OLLAMA_API_BASE"] = os.getenv("OLLAMA_API_BASE", "")
+os.environ["TEMP"] = os.getenv("TEMP", "0.4")
+os.environ["TOP_P"] = os.getenv("TOP_P", "0.3")
+os.environ["HTML_OUT"] = os.getenv("HTML_OUT", "False")
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY", "")
+os.environ["OPENAI_MODEL"] = os.getenv("OPENAI_MODEL", "")
+os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY", "")
+os.environ["GROQ_MODEL"] = os.getenv("GROQ_MODEL", "")
+
+# Define constants
+MODELS_DIR: Final = os.environ["MODELS_DIR"]
+CIVITAI_TOKEN: Final = os.environ["CIVITAI_TOKEN"]
+OLLAMA_MODEL: Final = os.environ["OLLAMA_MODEL"]
+OLLAMA_API_BASE: Final = os.environ["OLLAMA_API_BASE"]
+TEMP: Final = float(os.environ["TEMP"])
+TOP_P: Final = float(os.environ["TOP_P"])
+HTML_OUT: Final = os.environ["HTML_OUT"].lower() == "true"
+OPENAI_API_KEY: Final = os.environ["OPENAI_API_KEY"]
+OPENAI_MODEL: Final = os.environ["OPENAI_MODEL"]
+GROQ_API_KEY: Final = os.environ["GROQ_API_KEY"]
+GROQ_MODEL: Final = os.environ["GROQ_MODEL"]
 
 CIVITAI_MODELS: Final = "https://civitai.com/api/v1/models"
 CIVITAI_IMAGES: Final = "https://civitai.com/api/v1/images"

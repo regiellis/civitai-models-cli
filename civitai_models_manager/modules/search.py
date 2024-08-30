@@ -191,9 +191,7 @@ async def search_cli(
                     ),
                     style="yellow",
                 )
-                base = Text(
-                    model.get("modelVersions")[0]["baseModel"], style="yellow"
-                )
+                base = Text(model.get("modelVersions")[0]["baseModel"], style="yellow")
                 nsfw = (
                     Text("Yes", style="green")
                     if model["nsfw"]
