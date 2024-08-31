@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.7.5] - 2024-08-30
+- **Hotfix**: Fixed details for versions not pulling from site.
+
 ## [0.7.9] - 2024-08-30
 - **Feature**:  "Abilty to create a .env file if one doesnt exist on first run"
 

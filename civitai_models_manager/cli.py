@@ -162,7 +162,7 @@ def create_image_command():
     Generate a image on the CivitAI platform.
     :return: The result of the image creation.
     """
-    feedback_message("Coming in v0.8.0", "info")
+    feedback_message("Coming in v0.8.1", "info")
 
 @create_cli.command("jobs", help="Fetch jobs details based on token or Job ID.")
 def fetch_job_command(token: str = None, is_job_id: bool = False, query: str = None, cancel: bool = False):
@@ -170,7 +170,7 @@ def fetch_job_command(token: str = None, is_job_id: bool = False, query: str = N
     Fetch jobs details based on token or Job ID.
     :return: The result of the job details.
     """
-    feedback_message("Coming in v0.8.0", "info")
+    feedback_message("Coming in v0.8.1", "info")
 
 
 @civitai_cli.command(
