@@ -27,6 +27,7 @@ from civitai_models_manager import (
     OPENAI_OPTIONS,
     GROQ_OPTIONS,
 )
+from typing import List
 from .modules.helpers import feedback_message
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
@@ -213,16 +214,25 @@ def details_command(identifier: str, desc: bool = False, images: bool = False):
     )
 
 
-@civitai_cli.command("download", help="Download a specific model variant by ID.")
-def download_model_command(identifier: str, select: bool = False):
+@civitai_cli.command("download", help="Download up to 3 specific model variants by ID.")
+def download_model_command(
+    identifiers: List[str] = typer.Argument(..., help="The IDs of the models to download (up to 3)"),
+    select: bool = typer.Option(False, "--select", "-s", help="Enable version selection for each model")
+):
     """
-    Download a specific model variant by ID.
-    :param identifier: The ID of the model.
-    :param select: The selection of the model.
-    :return: The download of the model.
+    Download up to 3 specific model variants by ID.
+    :param identifiers: The IDs of the models to download (up to 3).
+    :param select: Enable version selection for each model.
+    :return: None
     """
-    download_model_cli(
-        identifier,
+    if len(identifiers) > 3:
+        typer.echo("You can download a maximum of 3 models at a time. Only the first 3 will be processed.")
+        identifiers = identifiers[:3]
+
+    typer.echo(f"Preparing to download {len(identifiers)} model(s)...")
+
+    asyncio.run(download_model_cli(
+        identifiers,
         select,
         MODELS_DIR=MODELS_DIR,
         CIVITAI_MODELS=CIVITAI_MODELS,
@@ -231,7 +241,7 @@ def download_model_command(identifier: str, select: bool = False):
         CIVITAI_TOKEN=CIVITAI_TOKEN,
         TYPES=TYPES,
         FILE_TYPES=FILE_TYPES,
-    )
+    ))
 
 
 @civitai_cli.command("remove", help="Remove specified models from local storage.")
