@@ -88,6 +88,8 @@ __version__ = __version__
 __all__ = ["civitai_cli"]
 
 civitai_cli = typer.Typer()
+create_cli = typer.Typer()
+civitai_cli.add_typer(create_cli, name="generate", help="Services on the CivitAI platform.")
 
 
 @civitai_cli.command(
@@ -153,6 +155,22 @@ def sanity_check_command():
         OPENAI_OPTIONS=OPENAI_OPTIONS,
         GROQ_OPTIONS=GROQ_OPTIONS,
     )
+
+@create_cli.command("create", help="Generate a image on the CivitAI platform.")
+def create_image_command():
+    """
+    Generate a image on the CivitAI platform.
+    :return: The result of the image creation.
+    """
+    feedback_message("Coming in v0.8.0", "info")
+
+@create_cli.command("jobs", help="Fetch jobs details based on token or Job ID.")
+def fetch_job_command(token: str = None, is_job_id: bool = False, query: str = None, cancel: bool = False):
+    """
+    Fetch jobs details based on token or Job ID.
+    :return: The result of the job details.
+    """
+    feedback_message("Coming in v0.8.0", "info")
 
 
 @civitai_cli.command(

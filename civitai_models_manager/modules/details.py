@@ -28,6 +28,7 @@ class DetailActions(Enum):
     ANOTHER_MODEL = "Get Details on a Version of this Model"
     DOWNLOAD_MODEL = "Download this Model"
     DOWNLOAD_VERSION = "Download a Version"
+    GENERATE_IMAGE = "Generate Image from Model on CivitAI"
     CANCEL = "Cancel"
 
 
@@ -66,7 +67,8 @@ def get_model_details(
         return {}
 
     model_data = fetch_model_data(CIVITAI_MODELS, model_id)
-    if not model_data:
+
+    if 'error' in model_data:
         model_data = fetch_version_data(CIVITAI_VERSIONS, CIVITAI_MODELS, model_id)
 
     return process_model_data(model_data) if model_data else {}
@@ -135,7 +137,7 @@ def get_metadata(data: Dict, is_version: bool) -> Dict[str, Any]:
         "stats": f"{safe_get(data, stats_path + ['downloadCount'], '')} downloads, "
         f"{safe_get(data, stats_path + ['thumbsUpCount'], '')} likes, "
         f"{safe_get(data, stats_path + ['thumbsDownCount'], '')} dislikes",
-        "size": format_file_size(safe_get(data, files_path + ["sizeKB"], "")),
+        "size": format_file_size(safe_get(data, files_path + ["sizeKB"], 0)),
         "format": safe_get(data, files_path + ["metadata", "format"], ".safetensors"),
         "file": safe_get(data, files_path + ["name"], ""),
     }
@@ -249,7 +251,7 @@ def print_model_details(
             "Select a version to get details on",
             choices=[f"{version['id']} - {version['name']}" for version in versions],
         ).ask()
-
+  
         if version_details:
             subprocess.run(
                 f"civitai-models details {int(version_details.split(' ')[0])}",
