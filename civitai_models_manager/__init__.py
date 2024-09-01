@@ -146,8 +146,8 @@ MODELS_DIR: Final = os.environ["MODELS_DIR"]
 CIVITAI_TOKEN: Final = os.environ["CIVITAI_TOKEN"]
 OLLAMA_MODEL: Final = os.environ["OLLAMA_MODEL"]
 OLLAMA_API_BASE: Final = os.environ["OLLAMA_API_BASE"]
-TEMP: Final = float(os.environ["TEMP"])
-TOP_P: Final = float(os.environ["TOP_P"])
+TEMP: Final = os.environ["TEMP"]
+TOP_P: Final = os.environ["TOP_P"]
 HTML_OUT: Final = os.environ["HTML_OUT"].lower() == "true"
 OPENAI_API_KEY: Final = os.environ["OPENAI_API_KEY"]
 OPENAI_MODEL: Final = os.environ["OPENAI_MODEL"]
