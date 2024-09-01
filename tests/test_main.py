@@ -16,7 +16,7 @@ def runner():
         (["list"], 1, None),
         (["stats"], 0, None),
         (["details", "12345"], 1, None),
-        (["download", "12345"], 1, None),
+        (["download", ["12345", '234343']], 1, None),
         (["--help"], 0, "Usage"),
     ],
 )
