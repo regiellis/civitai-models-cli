@@ -4,9 +4,11 @@ import typer
 from typing import Any, Dict
 from rich.console import Console
 from rich.table import Table
+from rich.markdown import Markdown
+from pathlib import Path
 
 
-console = Console(soft_wrap=True)
+console = Console()
 
 
 def feedback_message(message: str, type: str = "info") -> None:
@@ -69,3 +71,16 @@ def add_rows_to_table(table: Table, data: Dict[str, Any]) -> None:
         if isinstance(value, list):
             value = ", ".join(map(str, value))
         table.add_row(key, str(value))
+
+
+def display_readme(readme_file: str) -> None:
+    readme_path = Path(readme_file)
+
+    if readme_path.exists():
+        with readme_path.open("r", encoding="utf-8") as f:
+            markdown_content = f.read()
+        
+        md = Markdown(markdown_content)
+        console.print(md)
+    else:
+        typer.echo("README.md not found in the current directory.")

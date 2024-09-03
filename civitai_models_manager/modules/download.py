@@ -16,6 +16,7 @@ MAX_RETRIES = 3
 TIMEOUT = 30  # seconds
 MAX_CONCURRENT_DOWNLOADS = 3
 
+
 async def select_version(
     model_name: str, versions: List[Dict[str, Any]]
 ) -> Optional[Dict[str, Any]]:
@@ -38,7 +39,9 @@ async def select_version(
         )
 
     console.print(versions_table)
-    selected_version_id = await asyncio.to_thread(typer.prompt, "Enter the version ID to download:")
+    selected_version_id = await asyncio.to_thread(
+        typer.prompt, "Enter the version ID to download:"
+    )
 
     for version in versions:
         if str(version["id"]) == selected_version_id:
@@ -50,6 +53,7 @@ async def select_version(
     )
     return None
 
+
 async def check_for_upgrade(model_path: str, selected_version: Dict[str, Any]) -> bool:
     current_version = os.path.basename(model_path)
     if current_version != selected_version["file"]:
@@ -58,6 +62,7 @@ async def check_for_upgrade(model_path: str, selected_version: Dict[str, Any]) -
         )
         return await asyncio.to_thread(typer.confirm, "Do you want to upgrade?")
     return False
+
 
 async def download_model(
     MODELS_DIR: str,
@@ -123,21 +128,27 @@ async def download_model(
         model_name,
     )
 
+
 async def download_file(url: str, path: str, desc: str) -> Optional[str]:
     async with httpx.AsyncClient() as client:
         for attempt in range(MAX_RETRIES):
             try:
-                async with client.stream("GET", url, follow_redirects=True, timeout=TIMEOUT) as response:
+                async with client.stream(
+                    "GET", url, follow_redirects=True, timeout=TIMEOUT
+                ) as response:
                     response.raise_for_status()
 
                     total_size = int(response.headers.get("content-length", 0))
-                    with open(path, "wb") as f, tqdm(
-                        total=total_size,
-                        unit="B",
-                        unit_scale=True,
-                        desc=f"Downloading {desc}",
-                        colour="cyan",
-                    ) as progress_bar:
+                    with (
+                        open(path, "wb") as f,
+                        tqdm(
+                            total=total_size,
+                            unit="B",
+                            unit_scale=True,
+                            desc=f"Downloading {desc}",
+                            colour="cyan",
+                        ) as progress_bar,
+                    ):
                         async for chunk in response.aiter_bytes(chunk_size=8192):
                             if chunk:
                                 f.write(chunk)
@@ -145,8 +156,11 @@ async def download_file(url: str, path: str, desc: str) -> Optional[str]:
                 return path
             except (httpx.RequestError, httpx.TimeoutException) as e:
                 if attempt < MAX_RETRIES - 1:
-                    wait_time = 2 ** attempt
-                    feedback_message(f"Download failed. Retrying in {wait_time} seconds...", "warning")
+                    wait_time = 2**attempt
+                    feedback_message(
+                        f"Download failed. Retrying in {wait_time} seconds...",
+                        "warning",
+                    )
                     await asyncio.sleep(wait_time)
                 else:
                     feedback_message(
@@ -155,22 +169,28 @@ async def download_file(url: str, path: str, desc: str) -> Optional[str]:
                     )
                     return None
 
-async def download_multiple_models(identifiers: List[str], select: bool, **kwargs) -> List[Tuple[str, Optional[str]]]:
+
+async def download_multiple_models(
+    identifiers: List[str], select: bool, **kwargs
+) -> List[Tuple[str, Optional[str]]]:
     tasks = []
     for identifier in identifiers[:MAX_CONCURRENT_DOWNLOADS]:
         task = asyncio.create_task(download_single_model(identifier, select, **kwargs))
         tasks.append(task)
-    
+
     return await asyncio.gather(*tasks)
 
-async def download_single_model(identifier: str, select: bool, **kwargs) -> Tuple[str, Optional[str]]:
+
+async def download_single_model(
+    identifier: str, select: bool, **kwargs
+) -> Tuple[str, Optional[str]]:
     try:
         model_id = int(identifier)
         model_details = await asyncio.to_thread(
             get_model_details,
             kwargs.get("CIVITAI_MODELS"),
             kwargs.get("CIVITAI_VERSIONS"),
-            model_id
+            model_id,
         )
         types = kwargs.get("TYPES")
 
@@ -186,26 +206,30 @@ async def download_single_model(identifier: str, select: bool, **kwargs) -> Tupl
             )
             if model_path:
                 feedback_message(
-                    f"Model {identifier} downloaded successfully at: {model_path}", "info"
+                    f"Model {identifier} downloaded successfully at: {model_path}",
+                    "info",
                 )
                 return identifier, model_path
             else:
                 if model_path is not None:
-                    feedback_message(f"Failed to download the model {identifier}.", "error")
+                    feedback_message(
+                        f"Failed to download the model {identifier}.", "error"
+                    )
         else:
             feedback_message(f"No model found with ID: {identifier}.", "error")
     except ValueError:
-        feedback_message(f"Invalid model ID: {identifier}. Please enter a valid number.", "error")
-    
+        feedback_message(
+            f"Invalid model ID: {identifier}. Please enter a valid number.", "error"
+        )
+
     return identifier, None
 
-async def download_model_cli(identifiers: List[str], select: bool = False, **kwargs) -> None:
+
+async def download_model_cli(
+    identifiers: List[str], select: bool = False, **kwargs
+) -> None:
     if not identifiers:
         feedback_message("No model identifiers provided.", "error")
         return
 
     await download_multiple_models(identifiers, select, **kwargs)
-    
-
-
-

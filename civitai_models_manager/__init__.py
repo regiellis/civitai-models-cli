@@ -5,6 +5,7 @@ from dotenv import load_dotenv, set_key
 
 from civitai_models_manager.modules.helpers import feedback_message
 
+
 def get_required_input(prompt: str) -> str:
     """
     Prompt the user for input and ensure a non-empty response.
@@ -17,6 +18,7 @@ def get_required_input(prompt: str) -> str:
         if response:
             return response
         feedback_message("This field is required. Please enter a value.", "warning")
+
 
 def validate_directory(path: str) -> str:
     """
@@ -32,11 +34,16 @@ def validate_directory(path: str) -> str:
             feedback_message(f"Created directory: {dir_path}", "info")
         except Exception as e:
             feedback_message(f"Error creating directory: {e}", "error")
-            return validate_directory(get_required_input("Please enter a valid directory path: "))
+            return validate_directory(
+                get_required_input("Please enter a valid directory path: ")
+            )
     elif not dir_path.is_dir():
         feedback_message(f"{dir_path} is not a directory.", "error")
-        return validate_directory(get_required_input("Please enter a valid directory path: "))
+        return validate_directory(
+            get_required_input("Please enter a valid directory path: ")
+        )
     return str(dir_path)
+
 
 def create_env_file(env_path: Path) -> None:
     """
@@ -53,10 +60,13 @@ def create_env_file(env_path: Path) -> None:
     set_key(env_path, "CIVITAI_TOKEN", civitai_token)
 
     # Ask for MODELS_DIR
-    models_dir = validate_directory(get_required_input("Enter the path to your models directory: "))
+    models_dir = validate_directory(
+        get_required_input("Enter the path to your models directory: ")
+    )
     set_key(env_path, "MODELS_DIR", models_dir)
 
     feedback_message(f".env file created successfully at {env_path}", "info")
+
 
 def load_environment_variables() -> None:
     """
@@ -124,6 +134,7 @@ def load_environment_variables() -> None:
         load_dotenv(env_path)
     else:
         raise FileNotFoundError("No .env file found and user chose not to create one.")
+
 
 # Usage
 load_environment_variables()

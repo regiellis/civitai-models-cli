@@ -28,7 +28,8 @@ from civitai_models_manager import (
     GROQ_OPTIONS,
 )
 from typing import List
-from .modules.helpers import feedback_message
+from rich.markdown import Markdown
+from .modules.helpers import feedback_message, display_readme
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
 from .modules.details import get_model_details_cli
@@ -37,6 +38,7 @@ from .modules.download import download_model_cli
 from .modules.ai import explain_model_cli
 from .modules.search import search_cli_sync
 from .modules.remove import remove_models_cli
+from .modules.create import create_image_cli
 import typer
 
 from rich.traceback import install
@@ -90,7 +92,9 @@ __all__ = ["civitai_cli"]
 
 civitai_cli = typer.Typer()
 create_cli = typer.Typer()
-civitai_cli.add_typer(create_cli, name="generate", help="Services on the CivitAI platform.")
+civitai_cli.add_typer(
+    create_cli, name="generate", help="Services on the CivitAI platform."
+)
 
 
 @civitai_cli.command(
@@ -157,16 +161,22 @@ def sanity_check_command():
         GROQ_OPTIONS=GROQ_OPTIONS,
     )
 
-@create_cli.command("create", help="Generate a image on the CivitAI platform.")
-def create_image_command():
+
+@create_cli.command("image", help="Generate a image on the CivitAI platform.")
+def create_image_command(
+    model: int,
+):
     """
     Generate a image on the CivitAI platform.
     :return: The result of the image creation.
     """
-    feedback_message("Coming in v0.8.1", "info")
+    create_image_cli(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
 
-@create_cli.command("jobs", help="Fetch jobs details based on token or Job ID.")
-def fetch_job_command(token: str = None, is_job_id: bool = False, query: str = None, cancel: bool = False):
+
+@create_cli.command("check-jobs", help="Fetch jobs details based on token or Job ID.")
+def fetch_job_command(
+    token: str = None, is_job_id: bool = False, query: str = None, cancel: bool = False
+):
     """
     Fetch jobs details based on token or Job ID.
     :return: The result of the job details.
@@ -216,8 +226,12 @@ def details_command(identifier: str, desc: bool = False, images: bool = False):
 
 @civitai_cli.command("download", help="Download up to 3 specific model variants by ID.")
 def download_model_command(
-    identifiers: List[str] = typer.Argument(..., help="The IDs of the models to download (up to 3)"),
-    select: bool = typer.Option(False, "--select", "-s", help="Enable version selection for each model")
+    identifiers: List[str] = typer.Argument(
+        ..., help="The IDs of the models to download (up to 3)"
+    ),
+    select: bool = typer.Option(
+        False, "--select", "-s", help="Enable version selection for each model"
+    ),
 ):
     """
     Download up to 3 specific model variants by ID.
@@ -226,22 +240,26 @@ def download_model_command(
     :return: None
     """
     if len(identifiers) > 3:
-        typer.echo("You can download a maximum of 3 models at a time. Only the first 3 will be processed.")
+        typer.echo(
+            "You can download a maximum of 3 models at a time. Only the first 3 will be processed."
+        )
         identifiers = identifiers[:3]
 
     typer.echo(f"Preparing to download {len(identifiers)} model(s)...")
 
-    asyncio.run(download_model_cli(
-        identifiers,
-        select,
-        MODELS_DIR=MODELS_DIR,
-        CIVITAI_MODELS=CIVITAI_MODELS,
-        CIVITAI_DOWNLOAD=CIVITAI_DOWNLOAD,
-        CIVITAI_VERSIONS=CIVITAI_VERSIONS,
-        CIVITAI_TOKEN=CIVITAI_TOKEN,
-        TYPES=TYPES,
-        FILE_TYPES=FILE_TYPES,
-    ))
+    asyncio.run(
+        download_model_cli(
+            identifiers,
+            select,
+            MODELS_DIR=MODELS_DIR,
+            CIVITAI_MODELS=CIVITAI_MODELS,
+            CIVITAI_DOWNLOAD=CIVITAI_DOWNLOAD,
+            CIVITAI_VERSIONS=CIVITAI_VERSIONS,
+            CIVITAI_TOKEN=CIVITAI_TOKEN,
+            TYPES=TYPES,
+            FILE_TYPES=FILE_TYPES,
+        )
+    )
 
 
 @civitai_cli.command("remove", help="Remove specified models from local storage.")
@@ -260,3 +278,12 @@ def version_command():
     :return: The current version of the CLI.
     """
     feedback_message(f"Current version: {__version__}", "info")
+    
+
+@civitai_cli.command("about", help="Show README.md content.")
+def about_command():
+    """
+    Show README.md content.
+    :return: The README.md content.
+    """
+    display_readme("README.md")

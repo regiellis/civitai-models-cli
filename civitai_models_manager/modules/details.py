@@ -9,6 +9,7 @@ from .helpers import feedback_message, create_table, add_rows_to_table
 from .utils import safe_get, safe_url, format_file_size
 from enum import Enum
 from rich.text import Text
+from rich.markdown import Markdown
 from rich.console import Console
 
 
@@ -68,7 +69,7 @@ def get_model_details(
 
     model_data = fetch_model_data(CIVITAI_MODELS, model_id)
 
-    if 'error' in model_data:
+    if "error" in model_data:
         model_data = fetch_version_data(CIVITAI_VERSIONS, CIVITAI_MODELS, model_id)
 
     return process_model_data(model_data) if model_data else {}
@@ -164,8 +165,8 @@ def print_model_details(
     console.print(model_table)
 
     if desc:
-        desc_table = create_table("", [("Description", "cyan")])
-        desc_table.add_row(h2t.handle(model_details["description"]))
+        desc_table = create_table("", [("Description", "white")])
+        desc_table.add_row(Markdown(h2t.handle(model_details["description"])))
         console.print(desc_table)
 
     versions = model_details.get("versions", [])
@@ -251,7 +252,7 @@ def print_model_details(
             "Select a version to get details on",
             choices=[f"{version['id']} - {version['name']}" for version in versions],
         ).ask()
-  
+
         if version_details:
             subprocess.run(
                 f"civitai-models details {int(version_details.split(' ')[0])}",

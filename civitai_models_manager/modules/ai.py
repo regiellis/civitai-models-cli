@@ -6,7 +6,6 @@ from typing import Optional
 from rich.markdown import Markdown
 from rich.table import Table
 from rich.console import Console
-from rich.pretty import pprint
 
 from ollama import Client as OllamaClient
 from openai import OpenAI as OpenAIClient
@@ -14,7 +13,7 @@ from groq import Groq as GroqClient
 from .details import get_model_details
 from .helpers import feedback_message
 
-from transformers import pipeline
+# from transformers import pipeline
 
 console = Console(soft_wrap=True)
 
@@ -25,29 +24,35 @@ cache_dir = current_dir / "models" / ".cache"
 cache_dir.mkdir(parents=True, exist_ok=True)
 cache_dir_str = str(cache_dir.resolve())
 
-os.environ["HF_HOME"] =  str(cache_dir_str)
+os.makedirs(f"{cache_dir_str}/transformers", exist_ok=True)
+os.makedirs(f"{cache_dir_str}/datasets", exist_ok=True)
+
+os.environ["HF_HOME"] = str(cache_dir_str)
 os.environ["TRANSFORMERS_CACHE"] = f"{cache_dir_str}/transformers"
 os.environ["HF_DATASETS_CACHE"] = f"{cache_dir_str}/datasets"
-os.environ['TRANSFORMERS_NO_ADVISORY_WARNINGS'] = 'true'
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
 
-warnings.filterwarnings("ignore", message=".*`clean_up_tokenization_spaces` was not set.*")
+warnings.filterwarnings(
+    "ignore", message=".*`clean_up_tokenization_spaces` was not set.*"
+)
 
-explainer = pipeline("summarization", model="google-t5/t5-large", device="cuda:0", clean_up_tokenization_spaces=True)
+# explainer = pipeline("summarization", model="google-t5/t5-large", device="cuda:0", clean_up_tokenization_spaces=True)
 
-def explain_model_description(desc: str) -> Optional[str]:
-    
-    if not desc:
-        feedback_message("No description available to summarize", "warning")
-        return None
-    
-    try:
-        desc = html2text.html2text(desc)
-        summary = explainer(desc, max_length=len(desc), min_length=30, early_stopping=False)
-        return summary[0]["summary_text"]
-    except Exception as e:
-        feedback_message(f"Failed to summarize the model description // {e}", "error")
-        return None
-    
+# TODO: Fix download for every command
+# def explain_model_description(desc: str) -> Optional[str]:
+
+#     if not desc:
+#         feedback_message("No description available to summarize", "warning")
+#         return None
+
+#     try:
+#         desc = html2text.html2text(desc)
+#         summary = explainer(desc, max_length=len(desc), min_length=30, early_stopping=False)
+#         return summary[0]["summary_text"]
+#     except Exception as e:
+#         feedback_message(f"Failed to summarize the model description // {e}", "error")
+#         return None
+
 
 # TODO: Fix the markdown output
 def summarize_model_description(
@@ -56,10 +61,10 @@ def summarize_model_description(
     """Summarize the model description using the specified API service."""
     model_details = model
     description = model_details.get("description", "No description available.")
-    
-    explanation = explain_model_description(description)
-    pprint(explanation)
-    return
+
+    # explanation = explain_model_description(description)
+    # print(explanation)
+    # return
 
     try:
         if service == "ollama" and kwargs.get("Ollama"):
