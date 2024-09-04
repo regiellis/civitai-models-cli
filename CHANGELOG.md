@@ -1,7 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.8.1] - 2024-08-30
+## [0.8.2] - 2024-09-04
+- **Hotfix**: Fixed safe_get import.
+- 
+## [0.8.1] - 2024-09-04
 - **Hotfix**: Fixed slow downloads code; removed async code.
 
 ## [0.8.0] - 2024-08-30
