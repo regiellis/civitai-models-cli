@@ -1,7 +1,10 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.7.5] - 2024-08-30
+## [0.8.1] - 2024-08-30
+- **Hotfix**: Fixed slow downloads code; removed async code.
+
+## [0.8.0] - 2024-08-30
 - **Hotfix**: Fixed details for versions not pulling from site.
 
 ## [0.7.9] - 2024-08-30

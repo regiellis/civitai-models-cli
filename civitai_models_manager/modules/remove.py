@@ -5,7 +5,7 @@ from questionary import Style
 from typing import List, Tuple
 
 from rich.console import Console
-from .helpers import feedback_message, get_model_folder, create_table
+from .helpers import feedback_message, get_model_folder, create_table, safe_get
 from .utils import format_file_size
 from .list import list_models
 
@@ -76,7 +76,7 @@ def select_models_to_delete(
             (
                 model
                 for model in models_in_folder
-                if model[0].lower().startswith(model_name.lower())
+                if safe_get(model, [0], "").lower().startswith(model_name.lower())
             ),
             None,
         )

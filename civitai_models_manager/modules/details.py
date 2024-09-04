@@ -160,6 +160,11 @@ def print_model_details(
             "Creator": model_details["creator"],
             "NSFW": model_details["nsfw"],
             "Size": model_details["metadata"]["size"],
+            "AIR": (
+                model_details.get("air", "")
+                if model_details.get("air")
+                else safe_get(model_details, ["versions", 0, "air"], "")
+            ),
         },
     )
     console.print(model_table)

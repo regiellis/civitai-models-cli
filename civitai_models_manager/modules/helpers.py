@@ -79,7 +79,7 @@ def display_readme(readme_file: str) -> None:
     if readme_path.exists():
         with readme_path.open("r", encoding="utf-8") as f:
             markdown_content = f.read()
-        
+
         md = Markdown(markdown_content)
         console.print(md)
     else:

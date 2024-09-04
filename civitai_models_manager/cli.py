@@ -28,7 +28,6 @@ from civitai_models_manager import (
     GROQ_OPTIONS,
 )
 from typing import List
-from rich.markdown import Markdown
 from .modules.helpers import feedback_message, display_readme
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
@@ -170,7 +169,8 @@ def create_image_command(
     Generate a image on the CivitAI platform.
     :return: The result of the image creation.
     """
-    create_image_cli(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
+    #create_image_cli(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
+    feedback_message("Coming in v0.8.2", "info")
 
 
 @create_cli.command("check-jobs", help="Fetch jobs details based on token or Job ID.")
@@ -181,7 +181,7 @@ def fetch_job_command(
     Fetch jobs details based on token or Job ID.
     :return: The result of the job details.
     """
-    feedback_message("Coming in v0.8.1", "info")
+    feedback_message("Coming in v0.8.2", "info")
 
 
 @civitai_cli.command(
@@ -247,18 +247,16 @@ def download_model_command(
 
     typer.echo(f"Preparing to download {len(identifiers)} model(s)...")
 
-    asyncio.run(
-        download_model_cli(
-            identifiers,
-            select,
-            MODELS_DIR=MODELS_DIR,
-            CIVITAI_MODELS=CIVITAI_MODELS,
-            CIVITAI_DOWNLOAD=CIVITAI_DOWNLOAD,
-            CIVITAI_VERSIONS=CIVITAI_VERSIONS,
-            CIVITAI_TOKEN=CIVITAI_TOKEN,
-            TYPES=TYPES,
-            FILE_TYPES=FILE_TYPES,
-        )
+    download_model_cli(
+        identifiers,
+        select,
+        MODELS_DIR=MODELS_DIR,
+        CIVITAI_MODELS=CIVITAI_MODELS,
+        CIVITAI_DOWNLOAD=CIVITAI_DOWNLOAD,
+        CIVITAI_VERSIONS=CIVITAI_VERSIONS,
+        CIVITAI_TOKEN=CIVITAI_TOKEN,
+        TYPES=TYPES,
+        FILE_TYPES=FILE_TYPES,
     )
 
 
@@ -278,7 +276,7 @@ def version_command():
     :return: The current version of the CLI.
     """
     feedback_message(f"Current version: {__version__}", "info")
-    
+
 
 @civitai_cli.command("about", help="Show README.md content.")
 def about_command():

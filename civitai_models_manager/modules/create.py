@@ -79,14 +79,17 @@ def fetch_job_details():
     feedback_message("Job details fetched successfully.", "info")
 
 
-def create_image_cli(CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, model: int) -> None:
+def create_image_cli(
+    CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, requested_model: int
+) -> None:
 
-    model = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
+    model = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, requested_model)
+    print(model.get("air"))
 
-    if safe_get(model, ["air"]) is not None:
+    if safe_get(model, ["air"]) is None:
         # urn:air:pony:checkpoint:civitai:439889@686553
-        air = f"urn:air:{safe_get(model, ['versions', 0, 'base_model'])}:{model.get("type")}:civitai:{model.get("parent_id")}@{safe_get(model, ['id'])}"
+        air = f"urn:air:{safe_get(model, ['versions', 0, 'base_model'])}:{model.get("type").lower()}:civitai:{model.get("parent_id")}@{requested_model}"
         return print(air)
-    else:
-        air = model.get("air")
-        return print(model)
+    # else:
+    #     air = model.get("air")
+    #     return print(model)
