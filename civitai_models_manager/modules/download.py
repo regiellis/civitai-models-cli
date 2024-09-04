@@ -53,13 +53,15 @@ def select_version(
     return None
 
 
-def check_for_upgrade(model_path: str, selected_version: Dict[str, Any]) -> bool:
+def check_for_upgrade(versions: dict, model_path: str, selected_version: Dict[str, Any]) -> bool:
     current_version = os.path.basename(model_path)
-    if current_version != selected_version["file"]:
+    latest_version = versions[0].get("file")
+    print(latest_version, selected_version["file"])
+    if latest_version != selected_version["file"] and latest_version != current_version:
         feedback_message(
             f"A newer version '{selected_version['file']}' is available.", "info"
         )
-        return typer.confirm("Do you want to upgrade?")
+        return typer.confirm("Do you want to upgrade?", default=True)
     return False
 
 
@@ -113,7 +115,7 @@ def download_model(
     )
 
     if os.path.exists(model_path):
-        if not check_for_upgrade(model_path, selected_version):
+        if not check_for_upgrade(versions, model_path, selected_version):
             feedback_message(
                 f"Model {model_name} already exists at {model_path}. Skipping download.",
                 "warning",
