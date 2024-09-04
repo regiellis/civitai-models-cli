@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 ## [0.8.2] - 2024-09-04
+- **Hotfix**: More fixes for windows.
+
+## [0.8.2] - 2024-09-04
 - **Hotfix**: Fixed safe_get import.
 - 
 ## [0.8.1] - 2024-09-04
