@@ -11,7 +11,7 @@ from .details import get_model_details
 
 __all__ = ["download_model_cli"]
 
-console = Console(soft_wrap=True)
+console = Console()
 
 MAX_RETRIES = 3
 TIMEOUT = 30  # seconds
