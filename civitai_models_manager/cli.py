@@ -13,6 +13,8 @@
 # ]
 # ///
 import os
+import typer
+
 from typing import Optional
 from civitai_models_manager.__version__ import __version__
 from civitai_models_manager import (
@@ -38,7 +40,6 @@ from .modules.ai import explain_model_cli
 from .modules.search import search_cli_sync
 from .modules.remove import remove_models_cli
 from .modules.create import create_image_cli
-import typer
 
 from rich.traceback import install
 
@@ -90,14 +91,51 @@ __version__ = __version__
 __all__ = ["civitai_cli"]
 
 civitai_cli = typer.Typer()
-create_cli = typer.Typer()
+about_group = typer.Typer()
+stats_group = typer.Typer()
+search_group = typer.Typer()
+create_group = typer.Typer()
+tools_group = typer.Typer()
+
+
 civitai_cli.add_typer(
-    create_cli, name="generate", help="Services on the CivitAI platform."
+    about_group, 
+    name="about", 
+    help="Details about the civitai-model-manager.",
+    no_args_is_help=True,
+    )
+
+civitai_cli.add_typer(
+    stats_group, 
+    name="stats", 
+    help="Functions for stats on the models directory.",
+    no_args_is_help=True,
+)
+
+civitai_cli.add_typer(
+    create_group, 
+    name="generate", 
+    help="Generate images or track a Job on the CivitAI platform.",
+    no_args_is_help=True,
+)
+
+civitai_cli.add_typer(
+    search_group,
+    name="search",
+    help="Functions to search for models locally or on CivitAI.",
+    no_args_is_help=True,
+)
+
+civitai_cli.add_typer(
+    tools_group,
+    name="tools",
+    help="Miscellaneous tools",
+    no_args_is_help=True,
 )
 
 
-@civitai_cli.command(
-    "search",
+@search_group.command(
+    "civitai",
     help="Search for models by query, tag, or types, which are optional via the API.",
 )
 def search_models_command(
@@ -120,11 +158,21 @@ def search_models_command(
     )
 
 
-@civitai_cli.command(
+@search_group.command("local", help="Search for models stored on disk.")
+def local_search_command(
+    query: str = typer.Argument("", help="Search query"),
+):
+    return local_search_cli(query, MODELS_DIR=MODELS_DIR, FILE_TYPES=FILE_TYPES)
+
+
+@tools_group.command(
     "explain",
     help="Get a summary of a specific model by ID using the specified service (default is Ollama).",
 )
-def explain_model_command(identifier: str, service: str = "ollama"):
+def explain_model_command(
+    identifier: str = typer.Argument("", help="The ID of the model"),
+    service: str = typer.Option("ollama", help="The specified service to use"),
+):
     """
     Get a summary of a specific model by ID using the specified service (default is Ollama).
     :param identifier: The ID of the model.
@@ -141,12 +189,10 @@ def explain_model_command(identifier: str, service: str = "ollama"):
     )
 
 
-@civitai_cli.command("local-search", help="Search for models stored on disk.")
-def local_search_command(query: str):
-    return local_search_cli(query, MODELS_DIR=MODELS_DIR, FILE_TYPES=FILE_TYPES)
-
-
-@civitai_cli.command("sanity-check", help="Check to see if the app is ready to run.")
+@tools_group.command(
+    "sanity-check", 
+    help="Check to see if the app is ready to run."
+)
 def sanity_check_command():
     """
     Check to see if the app is ready to run.
@@ -161,41 +207,45 @@ def sanity_check_command():
     )
 
 
-@create_cli.command("image", help="Generate a image on the CivitAI platform.")
+@create_group.command("image", help="Generate a image on the CivitAI platform.")
 def create_image_command(
-    model: int,
+    model: int = typer.Argument(0, help="The ID of the model"),
 ):
     """
     Generate a image on the CivitAI platform.
     :return: The result of the image creation.
     """
-    #create_image_cli(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
-    feedback_message("Coming in v0.8.2", "info")
+    # create_image_cli(CIVITAI_MODELS, CIVITAI_VERSIONS, model)
+    return feedback_message("Coming in v0.8.6", "info")
 
 
-@create_cli.command("check-jobs", help="Fetch jobs details based on token or Job ID.")
+@create_group.command("check-jobs", help="Fetch jobs details based on token or Job ID.")
 def fetch_job_command(
-    token: str = None, is_job_id: bool = False, query: str = None, cancel: bool = False
+    token: str = typer.Argument(None, help="CivitAI token"),
+    query: str = typer.Argument(None, help="Search query"),
+    is_job_id: int = typer.Option(False, help="Whether the token is a Job ID"),
+    cancel: bool = False
 ):
     """
     Fetch jobs details based on token or Job ID.
     :return: The result of the job details.
     """
-    feedback_message("Coming in v0.8.2", "info")
+    return feedback_message("Coming in v0.8.6", "info")
 
 
-@civitai_cli.command(
-    "list", help="List available models along with their types and paths."
+@stats_group.command(
+    "by-type", 
+    help="List available models along with their types and paths."
 )
 def list_models_command():
     """
     List available models along with their types and paths.
     :return: The list of available models.
     """
-    list_models_cli()
+    return list_models_cli()
 
 
-@civitai_cli.command("stats", help="Stats on the parent models directory.")
+@stats_group.command("overview", help="Stats on the parent models directory.")
 def stats_command():
     """
     Stats on the parent models directory.
@@ -207,7 +257,11 @@ def stats_command():
 @civitai_cli.command(
     "details", help="Get detailed information about a specific model by ID."
 )
-def details_command(identifier: str, desc: bool = False, images: bool = False):
+def details_command(
+    identifier: str = typer.Argument("", help="The ID of the model"),
+    desc: bool = typer.Option(False, "--desc", "-d", help="The description of the model"),
+    images: bool = typer.Option(False, "--images", "-i", help="The images of the model"),
+):
     """
     Get detailed information about a specific model by ID.
     :param identifier: The ID of the model.
@@ -215,7 +269,7 @@ def details_command(identifier: str, desc: bool = False, images: bool = False):
     :param images: The images of the model.
     :return: The detailed information about the model.
     """
-    get_model_details_cli(
+    return get_model_details_cli(
         identifier,
         desc,
         images,
@@ -247,7 +301,7 @@ def download_model_command(
 
     typer.echo(f"Preparing to download {len(identifiers)} model(s)...")
 
-    download_model_cli(
+    return download_model_cli(
         identifiers,
         select,
         MODELS_DIR=MODELS_DIR,
@@ -260,29 +314,38 @@ def download_model_command(
     )
 
 
-@civitai_cli.command("remove", help="Remove specified models from local storage.")
+@civitai_cli.command(
+    "remove", 
+    help="Remove specified models from local storage."
+)
 def remove_models_command():
     """
     Remove specified models from local storage.
     :return: The removal of the models.
     """
-    remove_models_cli(MODELS_DIR=MODELS_DIR, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
+    return remove_models_cli(MODELS_DIR=MODELS_DIR, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 
-@civitai_cli.command("version", help="Current version of the CLI.")
+@about_group.command(
+    "version", 
+    help="Current version of the CLI."
+)
 def version_command():
     """
     Current version of the CLI.
     :return: The current version of the CLI.
     """
-    feedback_message(f"Current version: {__version__}", "info")
+    return feedback_message(f"Current version: {__version__}", "info")
 
 
-@civitai_cli.command("about", help="Show README.md content.")
+@about_group.command(
+    "readme", 
+    help="Show README.md content."
+)
 def about_command():
     """
     Show README.md content.
     :return: The README.md content.
     """
     read_me = "../README.md" if os.path.exists("../README.md") else "README.md"
-    display_readme(read_me)
+    return display_readme(read_me)

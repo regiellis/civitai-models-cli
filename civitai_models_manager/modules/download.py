@@ -54,7 +54,9 @@ def select_version(
     return None
 
 
-def check_for_upgrade(versions: dict, model_path: str, selected_version: Dict[str, Any]) -> bool:
+def check_for_upgrade(
+    versions: dict, model_path: str, selected_version: Dict[str, Any]
+) -> bool:
     current_version = os.path.basename(model_path)
     latest_version = versions[0].get("file")
     print(latest_version, selected_version["file"])

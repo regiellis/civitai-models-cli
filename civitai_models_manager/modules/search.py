@@ -13,6 +13,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, RetryError
 
 console = Console(soft_wrap=True)
 
+
 class Types(Enum):
     Checkpoint = "Checkpoint"
     TextualInversion = "TextualInversion"
@@ -21,20 +22,21 @@ class Types(Enum):
     LORA = "LORA"
     Controlnet = "Controlnet"
     Poses = "Poses"
-    
+
+
 class Sorts(Enum):
     HighestRated = "Highest Rated"
     MostDownloaded = "Most Downloaded"
     Newest = "Newest"
-    
+
+
 class Periods(Enum):
     AllTime = "AllTime"
     Year = "Year"
     Month = "Month"
     Week = "Week"
     Day = "Day"
-    
-    
+
 
 __all__ = ["search_models", "search_cli", "search_cli_sync"]
 
@@ -266,6 +268,7 @@ def search_cli_sync(
     """
     Synchronous wrapper for the asynchronous search_cli function.
     """
+
     def validate_enum(value, enum_class):
         if isinstance(value, enum_class):
             return value
