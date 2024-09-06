@@ -74,6 +74,7 @@ def add_rows_to_table(table: Table, data: Dict[str, Any]) -> None:
 
 
 def display_readme(readme_file: str) -> None:
+    
     readme_path = Path(readme_file)
 
     if readme_path.exists():

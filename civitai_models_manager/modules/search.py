@@ -2,8 +2,9 @@ import httpx
 import subprocess
 import questionary
 import asyncio
+from enum import Enum
 from questionary import Style
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Union, Optional
 from rich.console import Console
 from rich.text import Text
 from .helpers import create_table, feedback_message
@@ -11,6 +12,29 @@ from .utils import clean_text, format_file_size
 from tenacity import retry, stop_after_attempt, wait_exponential, RetryError
 
 console = Console(soft_wrap=True)
+
+class Types(Enum):
+    Checkpoint = "Checkpoint"
+    TextualInversion = "TextualInversion"
+    Hypernetwork = "Hypernetwork"
+    AestheticGradient = "AestheticGradient"
+    LORA = "LORA"
+    Controlnet = "Controlnet"
+    Poses = "Poses"
+    
+class Sorts(Enum):
+    HighestRated = "Highest Rated"
+    MostDownloaded = "Most Downloaded"
+    Newest = "Newest"
+    
+class Periods(Enum):
+    AllTime = "AllTime"
+    Year = "Year"
+    Month = "Month"
+    Week = "Week"
+    Day = "Day"
+    
+    
 
 __all__ = ["search_models", "search_cli", "search_cli_sync"]
 
@@ -231,10 +255,10 @@ async def search_cli(
 def search_cli_sync(
     query: str = "",
     tag=None,
-    types="Checkpoint",
-    limit=20,
-    sort="Highest Rated",
-    period="AllTime",
+    types: Union[str, List[str], Types, List[Types]] = Types.Checkpoint,
+    limit: int = 20,
+    sort: Union[str, Sorts] = Sorts.HighestRated,
+    period: Union[str, Periods] = Periods.AllTime,
     CIVITAI_MODELS=None,
     TYPES=None,
     download_function=None,
@@ -242,10 +266,66 @@ def search_cli_sync(
     """
     Synchronous wrapper for the asynchronous search_cli function.
     """
+    def validate_enum(value, enum_class):
+        if isinstance(value, enum_class):
+            return value
+        if isinstance(value, str):
+            try:
+                return enum_class(value)
+            except ValueError:
+                print(f"Invalid {enum_class.__name__}: {value}")
+                return None
+        return None
+
+    def get_valid_enum(enum_class):
+        while True:
+            print(f"Valid {enum_class.__name__} are:")
+            for e in enum_class:
+                print(f"- {e.value}")
+            user_input = input(f"Please enter a valid {enum_class.__name__}: ")
+            validated = validate_enum(user_input, enum_class)
+            if validated:
+                return validated
+
+    # Validate and convert the 'types' parameter
+    if isinstance(types, (str, Types)):
+        validated = validate_enum(types, Types)
+        if not validated:
+            types = get_valid_enum(Types)
+        else:
+            types = validated
+    elif isinstance(types, list):
+        validated_types = []
+        for t in types:
+            validated = validate_enum(t, Types)
+            if not validated:
+                validated = get_valid_enum(Types)
+            validated_types.append(validated)
+        types = validated_types
+    else:
+        print("Invalid 'types' parameter.")
+        types = get_valid_enum(Types)
+
+    # Validate and convert the 'sort' parameter
+    sort = validate_enum(sort, Sorts) or get_valid_enum(Sorts)
+
+    # Validate and convert the 'period' parameter
+    period = validate_enum(period, Periods) or get_valid_enum(Periods)
+
+    # Convert Types enum(s) to string(s) for the search_cli function
+    if isinstance(types, Types):
+        types = types.value
+    elif isinstance(types, list):
+        types = [t.value for t in types]
+
+    # Convert Sort and Period enums to strings
+    sort = sort.value
+    period = period.value
+
     asyncio.run(
         search_cli(
             query,
-            tag,
+            tag.lower(),
             types,
             limit,
             sort,

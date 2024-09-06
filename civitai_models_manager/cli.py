@@ -12,8 +12,8 @@
 #   "groq"
 # ]
 # ///
-import asyncio
-
+import os
+from typing import Optional
 from civitai_models_manager.__version__ import __version__
 from civitai_models_manager import (
     MODELS_DIR,
@@ -101,12 +101,12 @@ civitai_cli.add_typer(
     help="Search for models by query, tag, or types, which are optional via the API.",
 )
 def search_models_command(
-    query: str = "",
-    tag: str = None,
-    types: str = "Checkpoint",
-    limit: int = 20,
-    sort: str = "Highest Rated",
-    period: str = "AllTime",
+    query: str = typer.Argument("", help="Search query"),
+    tag: Optional[str] = typer.Option("", help="Filter by tag"),
+    types: str = typer.Option("Checkpoint", help="Filter by model type"),
+    limit: int = typer.Option(20, help="Limit the number of results"),
+    sort: str = typer.Option("Highest Rated", help="Sort order for results"),
+    period: str = typer.Option("AllTime", help="Time period for results"),
 ):
     search_cli_sync(
         query,
@@ -284,4 +284,5 @@ def about_command():
     Show README.md content.
     :return: The README.md content.
     """
-    display_readme("README.md")
+    read_me = "../README.md" if os.path.exists("../README.md") else "README.md"
+    display_readme(read_me)
