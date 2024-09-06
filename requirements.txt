@@ -10,3 +10,4 @@ openai
 groq
 asyncio
 tenacity
+civitai
