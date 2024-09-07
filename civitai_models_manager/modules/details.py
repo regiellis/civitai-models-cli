@@ -1,9 +1,10 @@
 import httpx
 import subprocess
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Tuple, Optional
 import html2text
 import questionary
+import re
 
 from .helpers import feedback_message, create_table, add_rows_to_table
 from .utils import safe_get, safe_url, format_file_size
@@ -11,6 +12,9 @@ from enum import Enum
 from rich.text import Text
 from rich.markdown import Markdown
 from rich.console import Console
+from rich import print_json
+
+
 
 
 __all__ = ["get_model_details_cli"]
@@ -48,8 +52,7 @@ def make_request(url: str) -> Optional[Dict]:
     try:
         response = httpx.get(url)
         if response.status_code == 404:
-            # TODO: Write a check for model versions that return 404 since civitai on gives
-            # pages to parent models and not versions
+            # TODO: Write a check for model versions that return 404 since civitai on gives pages to parent models and not versions
             pass
         else:
             response.raise_for_status()
@@ -71,12 +74,37 @@ def get_model_details(
 
     if "error" in model_data:
         model_data = fetch_version_data(CIVITAI_VERSIONS, CIVITAI_MODELS, model_id)
-
+    
     return process_model_data(model_data) if model_data else {}
+
+
+def process_string(v: Dict[str, Any], data: Dict[str, Any]) -> str:
+    # Construct the original string
+    input_string = f"urn:air:{v.get('baseModel', '')}:{data.get('type', 'checkpoint')}:civitai:{data.get('id')}@{v.get('id')}"
+    
+    # Convert to lowercase
+    processed = input_string.lower()
+    
+    # Define replacements as (pattern, replacement) tuples
+    replacements: List[Tuple[str, str]] = [
+        (r"flux\.1\s*[sd]", "flux1"),
+        (r"sd\s*(?:1\.5|1)", "sd1"),
+        (r"sd\s*(?:2\.5|2)", "sd2"),
+        (r"sd\s*3", "sd3"),
+        (r"sdxl(?:[-\s].*)?", "sdxl"),
+        # Add more replacements as needed
+    ]
+    
+    # Apply all replacements using regex
+    for pattern, replacement in replacements:
+        processed = re.sub(pattern, replacement, processed, flags=re.IGNORECASE)
+    
+    return processed
 
 
 def process_model_data(data: Dict) -> Dict[str, Any]:
     is_version = "model" in data
+    
 
     versions = (
         [
@@ -87,6 +115,8 @@ def process_model_data(data: Dict) -> Dict[str, Any]:
                 "download_url": v.get("files", [{}])[0].get("downloadUrl", ""),
                 "images": v.get("images", [{}])[0].get("url", ""),
                 "file": v.get("files", [{}])[0].get("name", ""),
+                "air": process_string(v, data) 
+                #f"urn:air:{v.get('baseModel', '')}:{data.get('type', 'checkpoint')}:civitai:{data.get('id')}@{v.get('id')}".lower().replace("flux.1 s", "flux1")
             }
             for v in data.get("modelVersions", [])
         ]
@@ -102,6 +132,7 @@ def process_model_data(data: Dict) -> Dict[str, Any]:
         "description": data.get("description", ""),
         "type": safe_get(data, ["model", "type"] if is_version else ["type"], ""),
         "base_model": data.get("baseModel", ""),
+        "air": data.get("air", ""),
         "download_url": safe_get(
             data,
             ["modelVersions", 0, "downloadUrl"] if not is_version else ["downloadUrl"],
@@ -160,18 +191,14 @@ def print_model_details(
             "Creator": model_details["creator"],
             "NSFW": model_details["nsfw"],
             "Size": model_details["metadata"]["size"],
-            "AIR": (
-                model_details.get("air", "")
-                if model_details.get("air")
-                else safe_get(model_details, ["versions", 0, "air"], "")
-            ),
+            "AIR": model_details["air"] if model_details.get("air") else model_details["versions"][0]["air"],
         },
     )
     console.print(model_table)
 
     if desc:
         desc_table = create_table("", [("Description", "white")])
-        desc_table.add_row(Markdown(h2t.handle(model_details["description"])))
+        desc_table.add_row(Markdown(h2t.handle( model_details["description"])))
         console.print(desc_table)
 
     versions = model_details.get("versions", [])
@@ -184,15 +211,17 @@ def print_model_details(
                 ("Base Model", "bright_yellow"),
                 ("Download URL", "bright_yellow"),
                 ("Images", "bright_yellow"),
+                ("air", "bright_yellow"),
             ],
         )
-        for version in versions:
+        for count, version in enumerate(versions):
             version_table.add_row(
                 str(version["id"]),
                 version["name"],
                 version["base_model"],
                 safe_url(version["download_url"]),
                 safe_url(version["images"]),
+                safe_get(version, ["air"], ""),
             )
         console.print(version_table)
 

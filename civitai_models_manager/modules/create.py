@@ -12,7 +12,7 @@ from .utils import safe_get
 from .details import get_model_details
 
 os.environ["CIVITAI_API_TOKEN"] = os.getenv("CIVITAI_TOKEN")
-import civitai
+from civitai import image
 
 SCHEDULERS: Final[List[str]] = [
     "EulerA",

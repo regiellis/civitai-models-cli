@@ -170,7 +170,7 @@ def local_search_command(
 )
 def explain_model_command(
     identifier: str = typer.Argument("", help="The ID of the model"),
-    service: str = typer.Option("ollama", help="The specified service to use"),
+    service: str = typer.Option("ollama", "-s", help="The specified service to use"),
 ):
     """
     Get a summary of a specific model by ID using the specified service (default is Ollama).
