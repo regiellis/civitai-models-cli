@@ -12,9 +12,6 @@ from enum import Enum
 from rich.text import Text
 from rich.markdown import Markdown
 from rich.console import Console
-from rich import print_json
-
-
 
 
 __all__ = ["get_model_details_cli"]
@@ -78,7 +75,7 @@ def get_model_details(
     return process_model_data(model_data) if model_data else {}
 
 
-def process_string(v: Dict[str, Any], data: Dict[str, Any]) -> str:
+def process_string(v: Dict[str, Any], data: Dict[str, Any], idx: int) -> str:
     # Construct the original string
     input_string = f"urn:air:{v.get('baseModel', '')}:{data.get('type', 'checkpoint')}:civitai:{data.get('id')}@{v.get('id')}"
     
@@ -115,10 +112,10 @@ def process_model_data(data: Dict) -> Dict[str, Any]:
                 "download_url": v.get("files", [{}])[0].get("downloadUrl", ""),
                 "images": v.get("images", [{}])[0].get("url", ""),
                 "file": v.get("files", [{}])[0].get("name", ""),
-                "air": process_string(v, data) 
+                "air": process_string(v, data, i) 
                 #f"urn:air:{v.get('baseModel', '')}:{data.get('type', 'checkpoint')}:civitai:{data.get('id')}@{v.get('id')}".lower().replace("flux.1 s", "flux1")
             }
-            for v in data.get("modelVersions", [])
+            for i, v in enumerate(data.get("modelVersions", []))
         ]
         if not is_version
         else []

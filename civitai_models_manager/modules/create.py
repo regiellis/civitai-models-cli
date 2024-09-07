@@ -4,12 +4,11 @@ from pathlib import Path
 import enum as Enum
 from typing import Dict, List, Final
 from questionary import prompt, select, confirm, autocomplete
-import json
-
+from rich import print_json
 
 from civitai_models_manager.modules.helpers import feedback_message
 from .utils import safe_get
-from .details import get_model_details
+from .details import get_model_details, process_model_data
 
 os.environ["CIVITAI_API_TOKEN"] = os.getenv("CIVITAI_TOKEN")
 from civitai import image
@@ -82,9 +81,11 @@ def fetch_job_details():
 def create_image_cli(
     CIVITAI_MODELS: str, CIVITAI_VERSIONS: str, requested_model: int
 ) -> None:
-    pass
-    # model = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, requested_model)
-    # print(model.get("air"))
+
+    raw_model = get_model_details(CIVITAI_MODELS, CIVITAI_VERSIONS, requested_model)
+    
+    for v in raw_model.get("versions"):
+        print(v)
 
     # if safe_get(model, ["air"]) is None:
     # urn:air:pony:checkpoint:civitai:439889@686553
