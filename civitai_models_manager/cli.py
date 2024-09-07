@@ -12,7 +12,7 @@
 #   "groq"
 # ]
 # ///
-import os
+
 import typer
 
 from typing import Optional
@@ -30,6 +30,8 @@ from civitai_models_manager import (
     GROQ_OPTIONS,
 )
 from typing import List
+from pathlib import Path
+import importlib.resources as pkg_resources
 from .modules.helpers import feedback_message, display_readme
 from .modules.tools import sanity_check_cli
 from .modules.stats import inspect_models_cli
@@ -62,28 +64,27 @@ $ pip install . or pipx install . # To install the package locally (recommended)
 $ civitai-model-manager [OPTIONS] [COMMAND] [ARGS]
 
 Options:
-    details INT                   Get detailed information about a specific model by ID.
-    download INT                  Download a specific model variant by ID.
-    explain INT                   Get a summary of a specific model by ID.
-    list                          List available models along with their types and paths.
-    stats                         Stats on the parent models directory.
-    sanity-check                  Check to see if the app is ready to run.
-    search TEXT --query           Search for models by query, tag, or types, which are optional via the API.
-    remove                        Remove specified models from local storage.
-    --help                        Show this message and exit.
+    [stats] details INT                   Get detailed information about a specific model by ID.
+    download INT                          Download a specific model variant by ID.
+    [tools] explain INT                   Get a summary of a specific model by ID.
+    [stats] details                       List available models along with their types and paths.
+    [stats] overview                      Stats on the parent models directory.
+    [tools] sanity-check                  Check to see if the app is ready to run.
+    search TEXT --query                   Search for models by query, tag, or types, which are optional via the API.
+    remove                                Remove specified models from local storage.
+    --help                                Show this message and exit.
 
 Examples:
 
-$ civitai-models list
-$ civitai-models stats
+$ civitai-models about [about] [readme]
 $ civitai-models details 12345 [desc] [images]
 $ civitai-models download 54321 [--select]
 $ civitai-models remove
-$ civitai-models explain 12345 [--service ollama]
-$ civitai-models search "text" [--tag "tag1"] [--types "Checkpoint"] [--limit 20] [--sort "Highest Rated"] [--period "AllTime"]
-$ civitai-models sanity-check
-$ civitai-models help
-$ civitai-models version
+$ civitai-models search  "text" [--tag "tag1"] [--types "Checkpoint"] [--limit 20] [--sort "Highest Rated"] [--period "AllTime"]
+$ civitai-models stats [overview] [details]
+$ civitai-models tools explain 12345 [--service ollama]
+$ civitai-models tools sanity-check
+
 """
 
 __version__ = __version__
@@ -99,22 +100,22 @@ tools_group = typer.Typer()
 
 
 civitai_cli.add_typer(
-    about_group, 
-    name="about", 
+    about_group,
+    name="about",
     help="Details about the civitai-model-manager.",
     no_args_is_help=True,
-    )
+)
 
 civitai_cli.add_typer(
-    stats_group, 
-    name="stats", 
+    stats_group,
+    name="stats",
     help="Functions for stats on the models directory.",
     no_args_is_help=True,
 )
 
 civitai_cli.add_typer(
-    create_group, 
-    name="generate", 
+    create_group,
+    name="generate",
     help="Generate images or track a Job on the CivitAI platform.",
     no_args_is_help=True,
 )
@@ -189,10 +190,7 @@ def explain_model_command(
     )
 
 
-@tools_group.command(
-    "sanity-check", 
-    help="Check to see if the app is ready to run."
-)
+@tools_group.command("sanity-check", help="Check to see if the app is ready to run.")
 def sanity_check_command():
     """
     Check to see if the app is ready to run.
@@ -224,7 +222,7 @@ def fetch_job_command(
     token: str = typer.Argument(None, help="CivitAI token"),
     query: str = typer.Argument(None, help="Search query"),
     is_job_id: int = typer.Option(False, help="Whether the token is a Job ID"),
-    cancel: bool = False
+    cancel: bool = False,
 ):
     """
     Fetch jobs details based on token or Job ID.
@@ -234,8 +232,7 @@ def fetch_job_command(
 
 
 @stats_group.command(
-    "by-type", 
-    help="List available models along with their types and paths."
+    "by-type", help="List available models along with their types and paths."
 )
 def list_models_command():
     """
@@ -259,8 +256,12 @@ def stats_command():
 )
 def details_command(
     identifier: str = typer.Argument("", help="The ID of the model"),
-    desc: bool = typer.Option(False, "--desc", "-d", help="The description of the model"),
-    images: bool = typer.Option(False, "--images", "-i", help="The images of the model"),
+    desc: bool = typer.Option(
+        False, "--desc", "-d", help="The description of the model"
+    ),
+    images: bool = typer.Option(
+        False, "--images", "-i", help="The images of the model"
+    ),
 ):
     """
     Get detailed information about a specific model by ID.
@@ -314,10 +315,7 @@ def download_model_command(
     )
 
 
-@civitai_cli.command(
-    "remove", 
-    help="Remove specified models from local storage."
-)
+@civitai_cli.command("remove", help="Remove specified models from local storage.")
 def remove_models_command():
     """
     Remove specified models from local storage.
@@ -326,10 +324,7 @@ def remove_models_command():
     return remove_models_cli(MODELS_DIR=MODELS_DIR, TYPES=TYPES, FILE_TYPES=FILE_TYPES)
 
 
-@about_group.command(
-    "version", 
-    help="Current version of the CLI."
-)
+@about_group.command("version", help="Current version of the CLI.")
 def version_command():
     """
     Current version of the CLI.
@@ -338,14 +333,42 @@ def version_command():
     return feedback_message(f"Current version: {__version__}", "info")
 
 
-@about_group.command(
-    "readme", 
-    help="Show README.md content."
-)
-def about_command():
+@about_group.command("docs", help="Show README.md content.")
+def about_command(
+    readme: bool = typer.Option(
+        True, "--readme", "-r", help="Show the README.md content"
+    ),
+    changelog: bool = typer.Option(
+        False, "--changelog", "-c", help="Show the CHANGELOG.md content"
+    ),
+):
     """
-    Show README.md content.
-    :return: The README.md content.
+    Show README.md and/or CHANGELOG.md content.
     """
-    read_me = "../README.md" if os.path.exists("../README.md") else "README.md"
-    return display_readme(read_me)
+    documents: List[str] = []
+    if readme:
+        documents.append("README.md")
+    if changelog:
+        documents.append("CHANGELOG.md")
+    if not documents:
+        feedback_message(
+            "No document specified. please --readme [-r] or --changelog [-c]", "warning"
+        )
+
+    for document in documents:
+        try:
+            # Try to get the file content from the package resources
+            content = pkg_resources.read_text("civitai_models_manager", document)
+            # Create a temporary file to pass to display_readme
+            with Path(document).open("w", encoding="utf-8") as temp_file:
+                temp_file.write(content)
+            display_readme(document)
+            # Remove the temporary file
+            Path(document).unlink()
+        except FileNotFoundError:
+            # If not found in package resources, try the current directory
+            local_path = Path(document)
+            if local_path.exists():
+                display_readme(str(local_path))
+            else:
+                typer.echo(f"{document} not found.")

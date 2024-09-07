@@ -73,9 +73,9 @@ def add_rows_to_table(table: Table, data: Dict[str, Any]) -> None:
         table.add_row(key, str(value))
 
 
-def display_readme(readme_file: str) -> None:
+def display_readme(requested_file: str) -> None:
 
-    readme_path = Path(readme_file)
+    readme_path = Path(requested_file)
 
     if readme_path.exists():
         with readme_path.open("r", encoding="utf-8") as f:
@@ -84,4 +84,4 @@ def display_readme(readme_file: str) -> None:
         md = Markdown(markdown_content)
         console.print(md)
     else:
-        typer.echo("README.md not found in the current directory.")
+        typer.echo(f"{requested_file} not found in the current directory.")
