@@ -30,10 +30,8 @@ from civitai_models_manager import (
     GROQ_OPTIONS,
 )
 from typing import List
-from pathlib import Path
-import importlib.resources as pkg_resources
-from .modules.helpers import feedback_message, display_readme
-from .modules.tools import sanity_check_cli
+from .modules.helpers import feedback_message
+from .modules.tools import sanity_check_cli, about_cli
 from .modules.stats import inspect_models_cli
 from .modules.details import get_model_details_cli
 from .modules.list import list_models_cli, local_search_cli
@@ -345,30 +343,4 @@ def about_command(
     """
     Show README.md and/or CHANGELOG.md content.
     """
-    documents: List[str] = []
-    if readme:
-        documents.append("README.md")
-    if changelog:
-        documents.append("CHANGELOG.md")
-    if not documents:
-        feedback_message(
-            "No document specified. please --readme [-r] or --changelog [-c]", "warning"
-        )
-
-    for document in documents:
-        try:
-            # Try to get the file content from the package resources
-            content = pkg_resources.read_text("civitai_models_manager", document)
-            # Create a temporary file to pass to display_readme
-            with Path(document).open("w", encoding="utf-8") as temp_file:
-                temp_file.write(content)
-            display_readme(document)
-            # Remove the temporary file
-            Path(document).unlink()
-        except FileNotFoundError:
-            # If not found in package resources, try the current directory
-            local_path = Path(document)
-            if local_path.exists():
-                display_readme(str(local_path))
-            else:
-                typer.echo(f"{document} not found.")
+    about_cli(readme, changelog)
