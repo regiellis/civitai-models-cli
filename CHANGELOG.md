@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [0.8.3] - 2024-09-07
+## [0.8.4] - 2024-09-07
 - **Chore**: Update to search and nesting for commands...small fixes. Added air number to stats
 
 ## [0.8.3] - 2024-09-04

@@ -39,7 +39,7 @@ from .modules.download import download_model_cli
 from .modules.ai import explain_model_cli
 from .modules.search import search_cli_sync
 from .modules.remove import remove_models_cli
-from .modules.create import create_image_cli
+# from .modules.create import create_image_cli
 
 from rich.traceback import install
 
