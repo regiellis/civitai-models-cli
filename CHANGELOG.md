@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.8.5] - 2024-09-07
+- **Hotfix**: Image import fix
+
 ## [0.8.4] - 2024-09-07
 - **Chore**: Update to search and nesting for commands...small fixes. Added air number to stats
 
