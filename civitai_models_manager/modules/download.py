@@ -4,6 +4,8 @@ import shutil
 import tempfile
 import typer
 import time
+import hashlib
+import json
 from typing import Any, List, Dict, Optional, Tuple
 from tqdm import tqdm
 from rich.console import Console
@@ -59,7 +61,23 @@ def check_for_upgrade(
 ) -> bool:
     current_version = os.path.basename(model_path)
     latest_version = versions[0].get("file")
-    print(latest_version, selected_version["file"])
+    remote_hash = selected_version.get("sha256", "").lower()
+
+    try:
+        with open(model_path, "rb") as f:
+            local_hash = hashlib.file_digest(f, "sha256").hexdigest().lower()
+    except Exception as e:
+        feedback_message(
+            f"Error reading local file: {e}",
+            "error",
+        )
+        return False
+    if local_hash != remote_hash:
+        feedback_message(
+            f"Hash {selected_version['file']} not matching. Updating file",
+            "warning",
+        )
+        return True
     if latest_version != selected_version["file"] and latest_version != current_version:
         feedback_message(
             f"A newer version '{selected_version['file']}' is available.", "info"
@@ -89,11 +107,8 @@ def download_model(
     if not select and not model_details.get("parent_id"):
         selected_version = versions[0]
     elif not select and model_details.get("parent_id"):
-        selected_version = {
+        selected_version = model_details | {
             "id": model_id,
-            "name": model_details.get("name", ""),
-            "base_model": model_details.get("base_model", ""),
-            "download_url": model_details.get("download_url", ""),
             "images": model_details["images"][0].get("url", ""),
             "file": model_meta.get("file", ""),
         }
@@ -116,7 +131,41 @@ def download_model(
         selected_version.get("base_model", ""),
         selected_version.get("file"),
     )
-
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    with open(
+        f"{os.path.splitext(model_path)[0]}.json",
+        "w",
+        encoding="utf-8",
+    ) as metadata_file:
+        json.dump(
+            {
+                key: model_details[key]
+                for key in model_details.keys()
+                & {
+                    "id",
+                    "parent_id",
+                    "parent_name",
+                    "name",
+                    "description",
+                    "type",
+                    "base_model",
+                    "air",
+                    "tags",
+                    "creator",
+                    "trainedWords",
+                }
+            }
+            | {
+                "base_model": selected_version.get("base_model", ""),
+                "air": selected_version.get("air", ""),
+                "sha256": selected_version.get("file", "sha256"),
+                "parent_name": selected_version.get("parent_name", ""),
+                "parent_id": selected_version.get("parent_id", ""),
+            },
+            metadata_file,
+            ensure_ascii=False,
+            indent=2,
+        )
     if os.path.exists(model_path):
         if not check_for_upgrade(versions, model_path, selected_version):
             feedback_message(
@@ -124,8 +173,8 @@ def download_model(
                 "warning",
             )
             return None
-
-    os.makedirs(os.path.dirname(model_path), exist_ok=True)
+    with open(f"{model_path}.sha256", "w") as f:
+        f.write(selected_version.get("sha256", ""))
     return download_file(
         f"{CIVITAI_DOWNLOAD}/{selected_version['id']}?token={CIVITAI_TOKEN}",
         model_path,
@@ -164,6 +213,18 @@ def download_file(url: str, path: str, desc: str) -> Optional[str]:
                                     buffer.clear()
                             temp_file.write(buffer)
                         temp_file.close()
+                        with open(temp_file.name, "rb") as f:
+                            hash = hashlib.file_digest(f, "sha256").hexdigest().lower()
+                        with open(f"{path}.sha256", "r") as f:
+                            expected_hash = f.read().strip().lower()
+                        if hash != expected_hash:
+                            feedback_message(
+                                f"Downloaded file has incorrect hash. {hash} Skipping download. {expected_hash}",
+                                "error",
+                            )
+                            raise Exception(
+                                "Download corrupted file. Please try again."
+                            )
                         shutil.move(temp_file.name, path)
                         return path
                 except (httpx.RequestError, httpx.TimeoutException) as e:

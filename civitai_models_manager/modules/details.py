@@ -103,8 +103,20 @@ def process_string(v: Dict[str, Any], data: Dict[str, Any], idx: int) -> str:
 
     for pattern, replacement in replacements:
         processed = re.sub(pattern, replacement, processed, flags=re.IGNORECASE)
-    
+
     return processed
+
+
+def get_file_data(version):
+    file = next(
+        (file for file in version.get("files", []) if file.get("primary", False)),
+        {},
+    )
+    return {
+        "download_url": file.get("downloadUrl", ""),
+        "file": file.get("name", ""),
+        "sha256": file.get("hashes", {}).get("SHA256"),
+    }
 
 
 def process_model_data(data: Dict) -> Dict[str, Any]:
@@ -116,11 +128,10 @@ def process_model_data(data: Dict) -> Dict[str, Any]:
                 "stats": v.get("stats", ""),
                 "name": v.get("name", ""),
                 "base_model": v.get("baseModel", ""),
-                "download_url": v.get("files", [{}])[0].get("downloadUrl", ""),
-                "images": v.get("images", [{}])[0].get("url", ""),
-                "file": v.get("files", [{}])[0].get("name", ""),
                 "air": process_string(v, data, i),
+                "images": v.get("images", [{}])[0].get("url", ""),
             }
+            | (get_file_data(v))
             for i, v in enumerate(data.get("modelVersions", []))
         ]
         if not is_version
